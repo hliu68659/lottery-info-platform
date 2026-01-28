@@ -13,27 +13,12 @@ import {
 import { Link } from "wouter";
 
 export default function Admin() {
-  const { user, loading } = useAuth();
+  const { user } = useAuth();
   const { data: textBlocksCount } = trpc.textBlocks.list.useQuery({});
   const { data: imageBlocksCount } = trpc.imageBlocks.list.useQuery({});
   const { data: drawsCount } = trpc.lotteryDraws.list.useQuery({ limit: 100 });
 
-  if (loading) {
-    return <div className="min-h-screen flex items-center justify-center">加载中...</div>;
-  }
-
-  if (!user || user.role !== 'admin') {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Card>
-          <CardContent className="py-12 px-8 text-center">
-            <h2 className="text-2xl font-bold mb-4">访问受限</h2>
-            <p className="text-muted-foreground">您没有权限访问后台管理系统</p>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
+  // 权限检查已由 AdminRoute 组件处理
 
   const stats = [
     { 
@@ -102,7 +87,7 @@ export default function Admin() {
       <div className="space-y-8">
         <div>
           <h1 className="text-3xl font-bold">后台管理</h1>
-          <p className="text-muted-foreground mt-2">欢迎回来，{user.name || '管理员'}</p>
+          <p className="text-muted-foreground mt-2">欢迎回来，{user?.name || '管理员'}</p>
         </div>
 
         {/* 统计卡片 */}

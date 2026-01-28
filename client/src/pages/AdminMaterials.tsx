@@ -94,9 +94,7 @@ export default function AdminMaterials() {
     updateImageMutation.mutate({ id, visible: !visible });
   };
 
-  if (!user || user.role !== 'admin') {
-    return null;
-  }
+  // 权限检查已由 AdminRoute 组件处理
 
   const locationNames = {
     home: "首页",

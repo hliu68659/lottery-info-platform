@@ -85,9 +85,7 @@ export default function AdminDrawHistory() {
     }
   };
 
-  if (!user || user.role !== 'admin') {
-    return null;
-  }
+  // 权限检查已由 AdminRoute 组件处理
 
   return (
     <DashboardLayout>

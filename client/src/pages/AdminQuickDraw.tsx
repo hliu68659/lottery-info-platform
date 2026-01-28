@@ -72,9 +72,7 @@ export default function AdminQuickDraw() {
     });
   };
 
-  if (!user || user.role !== 'admin') {
-    return null;
-  }
+  // 权限检查已由 AdminRoute 组件处理
 
   const selectedLottery = lotteryTypes?.find(t => t.id === lotteryTypeId);
   const nextIssueNumber = latestDraw 

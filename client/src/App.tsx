@@ -13,6 +13,7 @@ import Admin from "./pages/Admin";
 import AdminQuickDraw from "./pages/AdminQuickDraw";
 import AdminDrawHistory from "./pages/AdminDrawHistory";
 import AdminMaterials from "./pages/AdminMaterials";
+import AdminRoute from "./components/AdminRoute";
 
 function Router() {
   return (
@@ -52,25 +53,57 @@ function Router() {
         />
       </Route>
       
-      {/* 后台管理路由 */}
-      <Route path={"/admin"} component={Admin} />
-      <Route path={"/admin/quick-draw"} component={AdminQuickDraw} />
-      <Route path={"/admin/draw-history"} component={AdminDrawHistory} />
-      <Route path={"/admin/materials"} component={AdminMaterials} />
-      <Route path={"/admin/text-blocks"} component={AdminMaterials} />
-      <Route path={"/admin/image-blocks"} component={AdminMaterials} />
-      <Route path={"/admin/draws"} component={AdminDrawHistory} />
+      {/* 后台管理路由 - 需要管理员权限 */}
+      <Route path={"/admin"}>
+        <AdminRoute>
+          <Admin />
+        </AdminRoute>
+      </Route>
+      <Route path={"/admin/quick-draw"}>
+        <AdminRoute>
+          <AdminQuickDraw />
+        </AdminRoute>
+      </Route>
+      <Route path={"/admin/draw-history"}>
+        <AdminRoute>
+          <AdminDrawHistory />
+        </AdminRoute>
+      </Route>
+      <Route path={"/admin/materials"}>
+        <AdminRoute>
+          <AdminMaterials />
+        </AdminRoute>
+      </Route>
+      <Route path={"/admin/text-blocks"}>
+        <AdminRoute>
+          <AdminMaterials />
+        </AdminRoute>
+      </Route>
+      <Route path={"/admin/image-blocks"}>
+        <AdminRoute>
+          <AdminMaterials />
+        </AdminRoute>
+      </Route>
+      <Route path={"/admin/draws"}>
+        <AdminRoute>
+          <AdminDrawHistory />
+        </AdminRoute>
+      </Route>
       <Route path={"/admin/ai-images"}>
-        <PlaceholderPage 
-          title="AI配图生成" 
-          description="AI配图生成功能正在开发中，敬请期待！" 
-        />
+        <AdminRoute>
+          <PlaceholderPage 
+            title="AI配图生成" 
+            description="AI配图生成功能正在开发中，敬请期待！" 
+          />
+        </AdminRoute>
       </Route>
       <Route path={"/admin/settings"}>
-        <PlaceholderPage 
-          title="系统设置" 
-          description="系统设置功能正在开发中，敬请期待！" 
-        />
+        <AdminRoute>
+          <PlaceholderPage 
+            title="系统设置" 
+            description="系统设置功能正在开发中，敬请期待！" 
+          />
+        </AdminRoute>
       </Route>
       
       <Route path={"/404"} component={NotFound} />
