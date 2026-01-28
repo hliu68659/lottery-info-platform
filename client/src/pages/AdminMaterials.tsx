@@ -176,8 +176,8 @@ export default function AdminMaterials() {
                     <Label>显示顺序</Label>
                     <Input
                       type="number"
-                      value={newText.displayOrder}
-                      onChange={(e) => setNewText({ ...newText, displayOrder: parseInt(e.target.value) })}
+                      value={newText.displayOrder || 0}
+                      onChange={(e) => setNewText({ ...newText, displayOrder: e.target.value ? parseInt(e.target.value) : 0 })}
                     />
                   </div>
                   <div className="flex items-center gap-2">
@@ -293,8 +293,8 @@ export default function AdminMaterials() {
                     <Label>显示顺序</Label>
                     <Input
                       type="number"
-                      value={newImage.displayOrder}
-                      onChange={(e) => setNewImage({ ...newImage, displayOrder: parseInt(e.target.value) })}
+                      value={newImage.displayOrder || 0}
+                      onChange={(e) => setNewImage({ ...newImage, displayOrder: e.target.value ? parseInt(e.target.value) : 0 })}
                     />
                   </div>
                   <div className="flex items-center gap-2">
