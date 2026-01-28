@@ -5,31 +5,84 @@ import { Route, Switch } from "wouter";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import Home from "./pages/Home";
+import MaterialDetail from "./pages/MaterialDetail";
+import ZodiacPage from "./pages/ZodiacPage";
+import HistoryPage from "./pages/HistoryPage";
+import PlaceholderPage from "./pages/PlaceholderPage";
+import Admin from "./pages/Admin";
+import AdminQuickDraw from "./pages/AdminQuickDraw";
+import AdminDrawHistory from "./pages/AdminDrawHistory";
+import AdminMaterials from "./pages/AdminMaterials";
 
 function Router() {
-  // make sure to consider if you need authentication for certain routes
   return (
     <Switch>
       <Route path={"/"} component={Home} />
+      <Route path={"/zodiac"} component={ZodiacPage} />
+      <Route path={"/history"} component={HistoryPage} />
+      
+      {/* 资料详情页 */}
+      <Route path={"/shensuan"}>
+        <MaterialDetail location="shensuan" title="神算子" />
+      </Route>
+      <Route path={"/guanjiapo"}>
+        <MaterialDetail location="guanjiapo" title="管家婆" />
+      </Route>
+      <Route path={"/huangdaxian"}>
+        <MaterialDetail location="huangdaxian" title="黄大仙" />
+      </Route>
+      
+      {/* 占位页面 */}
+      <Route path={"/barcode"}>
+        <PlaceholderPage 
+          title="条码助手" 
+          description="条码助手功能正在开发中，敬请期待！" 
+        />
+      </Route>
+      <Route path={"/formula"}>
+        <PlaceholderPage 
+          title="六合公式" 
+          description="六合公式功能正在开发中，敬请期待！" 
+        />
+      </Route>
+      <Route path={"/humor"}>
+        <PlaceholderPage 
+          title="幽默猜测" 
+          description="幽默猜测功能正在开发中，敬请期待！" 
+        />
+      </Route>
+      
+      {/* 后台管理路由 */}
+      <Route path={"/admin"} component={Admin} />
+      <Route path={"/admin/quick-draw"} component={AdminQuickDraw} />
+      <Route path={"/admin/draw-history"} component={AdminDrawHistory} />
+      <Route path={"/admin/materials"} component={AdminMaterials} />
+      <Route path={"/admin/text-blocks"} component={AdminMaterials} />
+      <Route path={"/admin/image-blocks"} component={AdminMaterials} />
+      <Route path={"/admin/draws"} component={AdminDrawHistory} />
+      <Route path={"/admin/ai-images"}>
+        <PlaceholderPage 
+          title="AI配图生成" 
+          description="AI配图生成功能正在开发中，敬请期待！" 
+        />
+      </Route>
+      <Route path={"/admin/settings"}>
+        <PlaceholderPage 
+          title="系统设置" 
+          description="系统设置功能正在开发中，敬请期待！" 
+        />
+      </Route>
+      
       <Route path={"/404"} component={NotFound} />
-      {/* Final fallback route */}
       <Route component={NotFound} />
     </Switch>
   );
 }
 
-// NOTE: About Theme
-// - First choose a default theme according to your design style (dark or light bg), than change color palette in index.css
-//   to keep consistent foreground/background color across components
-// - If you want to make theme switchable, pass `switchable` ThemeProvider and use `useTheme` hook
-
 function App() {
   return (
     <ErrorBoundary>
-      <ThemeProvider
-        defaultTheme="light"
-        // switchable
-      >
+      <ThemeProvider defaultTheme="light">
         <TooltipProvider>
           <Toaster />
           <Router />

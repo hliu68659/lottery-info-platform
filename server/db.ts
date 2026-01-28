@@ -1,11 +1,25 @@
-import { eq } from "drizzle-orm";
+import { eq, and, desc, asc } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users } from "../drizzle/schema";
+import { 
+  InsertUser, 
+  users,
+  textBlocks,
+  imageBlocks,
+  numberAttributes,
+  lotteryTypes,
+  lotteryDraws,
+  zodiacCards,
+  type TextBlock,
+  type ImageBlock,
+  type NumberAttribute,
+  type LotteryType,
+  type LotteryDraw,
+  type ZodiacCard,
+} from "../drizzle/schema";
 import { ENV } from './_core/env';
 
 let _db: ReturnType<typeof drizzle> | null = null;
 
-// Lazily create the drizzle instance so local tooling can run without a DB.
 export async function getDb() {
   if (!_db && process.env.DATABASE_URL) {
     try {
@@ -18,6 +32,7 @@ export async function getDb() {
   return _db;
 }
 
+// ============ 用户相关 ============
 export async function upsertUser(user: InsertUser): Promise<void> {
   if (!user.openId) {
     throw new Error("User openId is required for upsert");
@@ -89,4 +104,177 @@ export async function getUserByOpenId(openId: string) {
   return result.length > 0 ? result[0] : undefined;
 }
 
-// TODO: add feature queries here as your schema grows.
+// ============ 文字资料板块 ============
+export async function getTextBlocks(location?: string, visibleOnly = false) {
+  const db = await getDb();
+  if (!db) return [];
+
+  let query = db.select().from(textBlocks);
+  
+  const conditions = [];
+  if (location) {
+    conditions.push(eq(textBlocks.location, location as any));
+  }
+  if (visibleOnly) {
+    conditions.push(eq(textBlocks.visible, true));
+  }
+  
+  if (conditions.length > 0) {
+    query = query.where(and(...conditions)) as any;
+  }
+  
+  return await query.orderBy(asc(textBlocks.displayOrder));
+}
+
+export async function getTextBlockById(id: number) {
+  const db = await getDb();
+  if (!db) return null;
+  
+  const result = await db.select().from(textBlocks).where(eq(textBlocks.id, id)).limit(1);
+  return result[0] || null;
+}
+
+// ============ 图片资料板块 ============
+export async function getImageBlocks(location?: string, visibleOnly = false) {
+  const db = await getDb();
+  if (!db) return [];
+
+  let query = db.select().from(imageBlocks);
+  
+  const conditions = [];
+  if (location) {
+    conditions.push(eq(imageBlocks.location, location as any));
+  }
+  if (visibleOnly) {
+    conditions.push(eq(imageBlocks.visible, true));
+  }
+  
+  if (conditions.length > 0) {
+    query = query.where(and(...conditions)) as any;
+  }
+  
+  return await query.orderBy(asc(imageBlocks.displayOrder));
+}
+
+export async function getImageBlockById(id: number) {
+  const db = await getDb();
+  if (!db) return null;
+  
+  const result = await db.select().from(imageBlocks).where(eq(imageBlocks.id, id)).limit(1);
+  return result[0] || null;
+}
+
+// ============ 号码属性 ============
+export async function getNumberAttribute(number: number) {
+  const db = await getDb();
+  if (!db) return null;
+  
+  const result = await db.select().from(numberAttributes).where(eq(numberAttributes.number, number)).limit(1);
+  return result[0] || null;
+}
+
+export async function getAllNumberAttributes() {
+  const db = await getDb();
+  if (!db) return [];
+  
+  return await db.select().from(numberAttributes).orderBy(asc(numberAttributes.number));
+}
+
+// ============ 彩票类型 ============
+export async function getLotteryTypes(enabledOnly = false) {
+  const db = await getDb();
+  if (!db) return [];
+
+  let query = db.select().from(lotteryTypes);
+  
+  if (enabledOnly) {
+    query = query.where(eq(lotteryTypes.enabled, true)) as any;
+  }
+  
+  return await query.orderBy(asc(lotteryTypes.displayOrder));
+}
+
+export async function getLotteryTypeByCode(code: string) {
+  const db = await getDb();
+  if (!db) return null;
+  
+  const result = await db.select().from(lotteryTypes).where(eq(lotteryTypes.code, code)).limit(1);
+  return result[0] || null;
+}
+
+export async function getLotteryTypeById(id: number) {
+  const db = await getDb();
+  if (!db) return null;
+  
+  const result = await db.select().from(lotteryTypes).where(eq(lotteryTypes.id, id)).limit(1);
+  return result[0] || null;
+}
+
+// ============ 开奖记录 ============
+export async function getLotteryDraws(lotteryTypeId?: number, limit = 50) {
+  const db = await getDb();
+  if (!db) return [];
+
+  let query = db.select().from(lotteryDraws);
+  
+  if (lotteryTypeId) {
+    query = query.where(eq(lotteryDraws.lotteryTypeId, lotteryTypeId)) as any;
+  }
+  
+  return await query.orderBy(desc(lotteryDraws.drawTime)).limit(limit);
+}
+
+export async function getLatestDraw(lotteryTypeId: number) {
+  const db = await getDb();
+  if (!db) return null;
+  
+  const result = await db
+    .select()
+    .from(lotteryDraws)
+    .where(eq(lotteryDraws.lotteryTypeId, lotteryTypeId))
+    .orderBy(desc(lotteryDraws.drawTime))
+    .limit(1);
+  
+  return result[0] || null;
+}
+
+export async function getLotteryDrawById(id: number) {
+  const db = await getDb();
+  if (!db) return null;
+  
+  const result = await db.select().from(lotteryDraws).where(eq(lotteryDraws.id, id)).limit(1);
+  return result[0] || null;
+}
+
+export async function getPendingDraws() {
+  const db = await getDb();
+  if (!db) return [];
+  
+  return await db
+    .select()
+    .from(lotteryDraws)
+    .where(eq(lotteryDraws.status, "pending"))
+    .orderBy(asc(lotteryDraws.drawTime));
+}
+
+// ============ 生肖卡 ============
+export async function getActiveZodiacCard() {
+  const db = await getDb();
+  if (!db) return null;
+  
+  const result = await db
+    .select()
+    .from(zodiacCards)
+    .where(eq(zodiacCards.active, true))
+    .orderBy(desc(zodiacCards.year))
+    .limit(1);
+  
+  return result[0] || null;
+}
+
+export async function getAllZodiacCards() {
+  const db = await getDb();
+  if (!db) return [];
+  
+  return await db.select().from(zodiacCards).orderBy(desc(zodiacCards.year));
+}
