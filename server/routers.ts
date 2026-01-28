@@ -16,6 +16,7 @@ import {
 } from "../drizzle/schema";
 import { eq } from "drizzle-orm";
 import { generateImageFromText, generateImageByType } from "./imageGeneration";
+import { storagePut } from "../server/storage";
 
 // 管理员权限检查中间件
 const adminProcedure = protectedProcedure.use(({ ctx, next }) => {
@@ -27,6 +28,28 @@ const adminProcedure = protectedProcedure.use(({ ctx, next }) => {
 
 export const appRouter = router({
   system: systemRouter,
+  
+  // ============ 文件上传 ============
+  upload: router({
+    image: protectedProcedure
+      .input(z.object({
+        filename: z.string(),
+        base64: z.string(),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        try {
+          const buffer = Buffer.from(input.base64, 'base64');
+          const timestamp = Date.now();
+          const random = Math.random().toString(36).substring(2, 8);
+          const fileKey = `materials/${ctx.user.id}/${timestamp}-${random}-${input.filename}`;
+          const { url } = await storagePut(fileKey, buffer, 'image/jpeg');
+          return { url };
+        } catch (error) {
+          console.error('Image upload failed:', error);
+          throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Image upload failed' });
+        }
+      }),
+  }),
   
   auth: router({
     me: publicProcedure.query(opts => opts.ctx.user),

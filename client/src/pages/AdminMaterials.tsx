@@ -172,6 +172,24 @@ export default function AdminMaterials() {
                       value={newText.content}
                       onChange={(content) => setNewText({ ...newText, content })}
                       placeholder="输入内容，支持文字颜色、加粗、斜体等格式..."
+                      onImageUpload={async (file: File) => {
+                        const reader = new FileReader();
+                        return new Promise((resolve, reject) => {
+                          reader.onload = async (e) => {
+                            try {
+                              const base64 = (e.target?.result as string).split(',')[1];
+                              const result = await trpc.upload.image.useMutation().mutateAsync({
+                                filename: file.name,
+                                base64,
+                              });
+                              resolve(result.url);
+                            } catch (error) {
+                              reject(error);
+                            }
+                          };
+                          reader.readAsDataURL(file);
+                        });
+                      }}
                     />
                   </div>
                   <div className="space-y-2">
