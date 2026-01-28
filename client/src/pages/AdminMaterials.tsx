@@ -21,7 +21,7 @@ import { toast } from "sonner";
 import { Edit, Trash2, Plus, Eye, EyeOff } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { AIImageGeneratorDialog } from "@/components/AIImageGeneratorDialog";
-import { RichTextEditor, RichTextDisplay } from "@/components/RichTextEditor";
+import { RichTextEditor } from "@/components/RichTextEditor";
 
 export default function AdminMaterials() {
   const { user } = useAuth();
@@ -255,7 +255,10 @@ export default function AdminMaterials() {
                     </div>
                   </CardHeader>
                   <CardContent>
-                    <RichTextDisplay content={block.content} />
+                    <div
+                      className="prose prose-sm max-w-none"
+                      dangerouslySetInnerHTML={{ __html: block.content }}
+                    />
                   </CardContent>
                 </Card>
               ))}
