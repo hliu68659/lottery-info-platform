@@ -518,6 +518,134 @@ export default function AdminMaterials() {
             )}
           </TabsContent>
         </Tabs>
+
+        {/* 编辑文字资料对话框 */}
+        {editingText && (
+          <Dialog open={!!editingText} onOpenChange={(open) => !open && setEditingText(null)}>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>编辑文字资料</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4">
+                <div>
+                  <Label>标题</Label>
+                  <Input
+                    value={editingText.title}
+                    onChange={(e) => setEditingText({ ...editingText, title: e.target.value })}
+                    placeholder="输入标题"
+                  />
+                </div>
+                <div>
+                  <Label>内容</Label>
+                  <Textarea
+                    value={editingText.content}
+                    onChange={(e) => setEditingText({ ...editingText, content: e.target.value })}
+                    placeholder="输入内容"
+                    rows={5}
+                  />
+                </div>
+                <div>
+                  <Label>显示顺序</Label>
+                  <Input
+                    type="number"
+                    min="0"
+                    step="1"
+                    value={editingText.displayOrder}
+                    onChange={(e) => {
+                      const num = parseInt(e.target.value);
+                      if (!isNaN(num) && num >= 0) {
+                        setEditingText({ ...editingText, displayOrder: num });
+                      }
+                    }}
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">请输入正整数（最小值：0）</p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Switch
+                    checked={editingText.visible}
+                    onCheckedChange={(checked) => setEditingText({ ...editingText, visible: checked })}
+                  />
+                  <Label>立即显示</Label>
+                </div>
+                <Button
+                  onClick={() => updateTextMutation.mutate(editingText)}
+                  disabled={updateTextMutation.isPending}
+                  className="w-full"
+                >
+                  {updateTextMutation.isPending ? "保存中..." : "保存"}
+                </Button>
+              </div>
+            </DialogContent>
+          </Dialog>
+        )}
+
+        {/* 编辑图片资料对话框 */}
+        {editingImage && (
+          <Dialog open={!!editingImage} onOpenChange={(open) => !open && setEditingImage(null)}>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>编辑图片资料</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4">
+                <div>
+                  <Label>标题</Label>
+                  <Input
+                    value={editingImage.title}
+                    onChange={(e) => setEditingImage({ ...editingImage, title: e.target.value })}
+                    placeholder="输入标题"
+                  />
+                </div>
+                <div>
+                  <Label>图片URL</Label>
+                  <Input
+                    value={editingImage.imageUrl}
+                    onChange={(e) => setEditingImage({ ...editingImage, imageUrl: e.target.value })}
+                    placeholder="输入图片URL"
+                  />
+                </div>
+                <div>
+                  <Label>描述</Label>
+                  <Textarea
+                    value={editingImage.description || ""}
+                    onChange={(e) => setEditingImage({ ...editingImage, description: e.target.value })}
+                    placeholder="输入描述"
+                    rows={3}
+                  />
+                </div>
+                <div>
+                  <Label>显示顺序</Label>
+                  <Input
+                    type="number"
+                    min="0"
+                    step="1"
+                    value={editingImage.displayOrder}
+                    onChange={(e) => {
+                      const num = parseInt(e.target.value);
+                      if (!isNaN(num) && num >= 0) {
+                        setEditingImage({ ...editingImage, displayOrder: num });
+                      }
+                    }}
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">请输入正整数（最小值：0）</p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Switch
+                    checked={editingImage.visible}
+                    onCheckedChange={(checked) => setEditingImage({ ...editingImage, visible: checked })}
+                  />
+                  <Label>立即显示</Label>
+                </div>
+                <Button
+                  onClick={() => updateImageMutation.mutate(editingImage)}
+                  disabled={updateImageMutation.isPending}
+                  className="w-full"
+                >
+                  {updateImageMutation.isPending ? "保存中..." : "保存"}
+                </Button>
+              </div>
+            </DialogContent>
+          </Dialog>
+        )}
       </div>
     </DashboardLayout>
   );
