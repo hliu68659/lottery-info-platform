@@ -176,9 +176,22 @@ export default function AdminMaterials() {
                     <Label>显示顺序</Label>
                     <Input
                       type="number"
+                      min="0"
+                      step="1"
                       value={newText.displayOrder || 0}
-                      onChange={(e) => setNewText({ ...newText, displayOrder: e.target.value ? parseInt(e.target.value) : 0 })}
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        if (value === '') {
+                          setNewText({ ...newText, displayOrder: 0 });
+                        } else {
+                          const num = parseInt(value);
+                          if (!isNaN(num) && num >= 0) {
+                            setNewText({ ...newText, displayOrder: num });
+                          }
+                        }
+                      }}
                     />
+                    <p className="text-xs text-muted-foreground mt-1">请输入正整数（最小值：0）</p>
                   </div>
                   <div className="flex items-center gap-2">
                     <Switch
@@ -293,9 +306,22 @@ export default function AdminMaterials() {
                     <Label>显示顺序</Label>
                     <Input
                       type="number"
+                      min="0"
+                      step="1"
                       value={newImage.displayOrder || 0}
-                      onChange={(e) => setNewImage({ ...newImage, displayOrder: e.target.value ? parseInt(e.target.value) : 0 })}
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        if (value === '') {
+                          setNewImage({ ...newImage, displayOrder: 0 });
+                        } else {
+                          const num = parseInt(value);
+                          if (!isNaN(num) && num >= 0) {
+                            setNewImage({ ...newImage, displayOrder: num });
+                          }
+                        }
+                      }}
                     />
+                    <p className="text-xs text-muted-foreground mt-1">请输入正整数（最小值：0）</p>
                   </div>
                   <div className="flex items-center gap-2">
                     <Switch
