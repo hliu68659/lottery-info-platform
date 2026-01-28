@@ -9,6 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Checkbox } from "@/components/ui/checkbox";
 import { 
   Dialog,
   DialogContent,
@@ -18,7 +19,7 @@ import {
 } from "@/components/ui/dialog";
 import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
-import { Edit, Trash2, Plus, Eye, EyeOff } from "lucide-react";
+import { Edit, Trash2, Plus, Eye, EyeOff, ChevronUp, ChevronDown } from "lucide-react";
 import { AIImageGeneratorDialog } from "@/components/AIImageGeneratorDialog";
 
 export default function AdminMaterials() {
@@ -28,6 +29,11 @@ export default function AdminMaterials() {
   const [editingImage, setEditingImage] = useState<any>(null);
   const [newText, setNewText] = useState({ title: "", content: "", displayOrder: 0, visible: true });
   const [newImage, setNewImage] = useState({ title: "", imageUrl: "", description: "", displayOrder: 0, visible: true });
+  
+  // 批量操作状态
+  const [selectedTextIds, setSelectedTextIds] = useState<Set<number>>(new Set());
+  const [selectedImageIds, setSelectedImageIds] = useState<Set<number>>(new Set());
+  const [bulkDisplayOrder, setBulkDisplayOrder] = useState<number>(0);
 
   const { data: textBlocks, refetch: refetchText } = trpc.textBlocks.list.useQuery({ location: selectedLocation });
   const { data: imageBlocks, refetch: refetchImage } = trpc.imageBlocks.list.useQuery({ location: selectedLocation });
@@ -90,6 +96,93 @@ export default function AdminMaterials() {
 
   const toggleImageVisibility = (id: number, visible: boolean) => {
     updateImageMutation.mutate({ id, visible: !visible });
+  };
+
+  // 批量操作函数
+  const handleBulkDeleteText = () => {
+    if (selectedTextIds.size === 0) {
+      toast.error("请先选择要删除的资料");
+      return;
+    }
+    
+    if (confirm(`确定删除选中的 ${selectedTextIds.size} 条资料吗？`)) {
+      selectedTextIds.forEach(id => {
+        deleteTextMutation.mutate({ id });
+      });
+      setSelectedTextIds(new Set());
+    }
+  };
+
+  const handleBulkDeleteImage = () => {
+    if (selectedImageIds.size === 0) {
+      toast.error("请先选择要删除的资料");
+      return;
+    }
+    
+    if (confirm(`确定删除选中的 ${selectedImageIds.size} 条资料吗？`)) {
+      selectedImageIds.forEach(id => {
+        deleteImageMutation.mutate({ id });
+      });
+      setSelectedImageIds(new Set());
+    }
+  };
+
+  const handleBulkUpdateDisplayOrder = (type: 'text' | 'image') => {
+    const selectedIds = type === 'text' ? selectedTextIds : selectedImageIds;
+    
+    if (selectedIds.size === 0) {
+      toast.error("请先选择要调整的资料");
+      return;
+    }
+
+    const mutation = type === 'text' ? updateTextMutation : updateImageMutation;
+    selectedIds.forEach(id => {
+      mutation.mutate({ id, displayOrder: bulkDisplayOrder });
+    });
+    
+    toast.success(`已调整 ${selectedIds.size} 条资料的显示顺序`);
+    if (type === 'text') {
+      setSelectedTextIds(new Set());
+    } else {
+      setSelectedImageIds(new Set());
+    }
+    setBulkDisplayOrder(0);
+  };
+
+  const toggleTextSelection = (id: number) => {
+    const newSet = new Set(selectedTextIds);
+    if (newSet.has(id)) {
+      newSet.delete(id);
+    } else {
+      newSet.add(id);
+    }
+    setSelectedTextIds(newSet);
+  };
+
+  const toggleImageSelection = (id: number) => {
+    const newSet = new Set(selectedImageIds);
+    if (newSet.has(id)) {
+      newSet.delete(id);
+    } else {
+      newSet.add(id);
+    }
+    setSelectedImageIds(newSet);
+  };
+
+  const selectAllText = () => {
+    if (selectedTextIds.size === textBlocks?.length) {
+      setSelectedTextIds(new Set());
+    } else {
+      setSelectedTextIds(new Set(textBlocks?.map(b => b.id) || []));
+    }
+  };
+
+  const selectAllImage = () => {
+    if (selectedImageIds.size === imageBlocks?.length) {
+      setSelectedImageIds(new Set());
+    } else {
+      setSelectedImageIds(new Set(imageBlocks?.map(b => b.id) || []));
+    }
   };
 
   if (!user || user.role !== 'admin') {
@@ -211,13 +304,67 @@ export default function AdminMaterials() {
               </DialogContent>
             </Dialog>
 
+            {/* 批量操作工具栏 */}
+            {selectedTextIds.size > 0 && (
+              <Card className="bg-blue-50 border-blue-200">
+                <CardContent className="p-4">
+                  <div className="flex items-center justify-between gap-4">
+                    <div className="text-sm text-muted-foreground">
+                      已选择 {selectedTextIds.size} 条资料
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Input
+                        type="number"
+                        min="0"
+                        step="1"
+                        placeholder="新显示顺序"
+                        value={bulkDisplayOrder}
+                        onChange={(e) => setBulkDisplayOrder(e.target.value ? parseInt(e.target.value) : 0)}
+                        className="w-32"
+                      />
+                      <Button
+                        size="sm"
+                        onClick={() => handleBulkUpdateDisplayOrder('text')}
+                      >
+                        <ChevronUp className="w-4 h-4 mr-1" />
+                        调整顺序
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="destructive"
+                        onClick={handleBulkDeleteText}
+                      >
+                        <Trash2 className="w-4 h-4 mr-1" />
+                        批量删除
+                      </Button>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
             {/* 列表 */}
             <div className="space-y-4">
+              {textBlocks && textBlocks.length > 0 && (
+                <div className="flex items-center gap-2 mb-2">
+                  <Checkbox
+                    checked={selectedTextIds.size === textBlocks.length && textBlocks.length > 0}
+                    onCheckedChange={selectAllText}
+                  />
+                  <Label className="text-sm cursor-pointer">全选</Label>
+                </div>
+              )}
               {textBlocks?.map((block) => (
                 <Card key={block.id} className="card-elegant">
                   <CardHeader>
                     <div className="flex justify-between items-start">
-                      <CardTitle className="text-lg">{block.title}</CardTitle>
+                      <div className="flex items-center gap-3 flex-1">
+                        <Checkbox
+                          checked={selectedTextIds.has(block.id)}
+                          onCheckedChange={() => toggleTextSelection(block.id)}
+                        />
+                        <CardTitle className="text-lg">{block.title}</CardTitle>
+                      </div>
                       <div className="flex items-center gap-2">
                         <Button
                           variant="ghost"
@@ -251,6 +398,7 @@ export default function AdminMaterials() {
                     <p className="text-sm text-muted-foreground whitespace-pre-wrap">
                       {block.content}
                     </p>
+                    <p className="text-xs text-muted-foreground mt-2">显示顺序: {block.displayOrder}</p>
                   </CardContent>
                 </Card>
               ))}
@@ -341,10 +489,64 @@ export default function AdminMaterials() {
               </DialogContent>
             </Dialog>
 
+            {/* 批量操作工具栏 */}
+            {selectedImageIds.size > 0 && (
+              <Card className="bg-blue-50 border-blue-200">
+                <CardContent className="p-4">
+                  <div className="flex items-center justify-between gap-4">
+                    <div className="text-sm text-muted-foreground">
+                      已选择 {selectedImageIds.size} 条资料
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Input
+                        type="number"
+                        min="0"
+                        step="1"
+                        placeholder="新显示顺序"
+                        value={bulkDisplayOrder}
+                        onChange={(e) => setBulkDisplayOrder(e.target.value ? parseInt(e.target.value) : 0)}
+                        className="w-32"
+                      />
+                      <Button
+                        size="sm"
+                        onClick={() => handleBulkUpdateDisplayOrder('image')}
+                      >
+                        <ChevronUp className="w-4 h-4 mr-1" />
+                        调整顺序
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="destructive"
+                        onClick={handleBulkDeleteImage}
+                      >
+                        <Trash2 className="w-4 h-4 mr-1" />
+                        批量删除
+                      </Button>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
             {/* 列表 */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {imageBlocks && imageBlocks.length > 0 && (
+                <div className="col-span-full flex items-center gap-2 mb-2">
+                  <Checkbox
+                    checked={selectedImageIds.size === imageBlocks.length && imageBlocks.length > 0}
+                    onCheckedChange={selectAllImage}
+                  />
+                  <Label className="text-sm cursor-pointer">全选</Label>
+                </div>
+              )}
               {imageBlocks?.map((block) => (
-                <Card key={block.id} className="card-elegant">
+                <Card key={block.id} className="card-elegant relative">
+                  <div className="absolute top-2 left-2 z-10">
+                    <Checkbox
+                      checked={selectedImageIds.has(block.id)}
+                      onCheckedChange={() => toggleImageSelection(block.id)}
+                    />
+                  </div>
                   <div className="aspect-video relative overflow-hidden">
                     <img src={block.imageUrl} alt={block.title} className="w-full h-full object-cover" />
                   </div>
@@ -353,6 +555,7 @@ export default function AdminMaterials() {
                     {block.description && (
                       <p className="text-sm text-muted-foreground">{block.description}</p>
                     )}
+                    <p className="text-xs text-muted-foreground">显示顺序: {block.displayOrder}</p>
                     <div className="flex justify-end gap-2">
                       <Button
                         variant="ghost"
