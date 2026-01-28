@@ -19,7 +19,9 @@ import {
 import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
 import { Edit, Trash2, Plus, Eye, EyeOff } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
 import { AIImageGeneratorDialog } from "@/components/AIImageGeneratorDialog";
+import { RichTextEditor, RichTextDisplay } from "@/components/RichTextEditor";
 
 export default function AdminMaterials() {
   const { user } = useAuth();
@@ -166,10 +168,10 @@ export default function AdminMaterials() {
                   </div>
                   <div className="space-y-2">
                     <Label>内容</Label>
-                    <Textarea
+                    <RichTextEditor
                       value={newText.content}
-                      onChange={(e) => setNewText({ ...newText, content: e.target.value })}
-                      rows={6}
+                      onChange={(content) => setNewText({ ...newText, content })}
+                      placeholder="输入内容，支持文字颜色、加粗、斜体等格式..."
                     />
                   </div>
                   <div className="space-y-2">
@@ -235,9 +237,7 @@ export default function AdminMaterials() {
                     </div>
                   </CardHeader>
                   <CardContent>
-                    <p className="text-sm text-muted-foreground whitespace-pre-wrap">
-                      {block.content}
-                    </p>
+                    <RichTextDisplay content={block.content} />
                   </CardContent>
                 </Card>
               ))}

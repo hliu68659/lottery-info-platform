@@ -1,0 +1,78 @@
+.rich-text-editor-wrapper {
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  overflow: hidden;
+  background: white;
+}
+
+.rich-text-editor-wrapper .ql-toolbar {
+  border-bottom: 1px solid #ddd;
+  background: #f9f9f9;
+  padding: 8px;
+}
+
+.rich-text-editor-wrapper .ql-container {
+  font-family: inherit;
+  font-size: 14px;
+}
+
+.rich-text-editor-wrapper .ql-editor {
+  min-height: 200px;
+  padding: 12px;
+}
+
+.rich-text-editor-wrapper .ql-editor.ql-blank::before {
+  color: #999;
+  font-style: italic;
+}
+
+.rich-text-display {
+  padding: 12px;
+  line-height: 1.6;
+  word-break: break-word;
+}
+
+.rich-text-display p {
+  margin: 8px 0;
+}
+
+.rich-text-display ul,
+.rich-text-display ol {
+  margin: 8px 0;
+  padding-left: 24px;
+}
+
+.rich-text-display li {
+  margin: 4px 0;
+}
+
+.rich-text-display a {
+  color: #0066cc;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.rich-text-display a:hover {
+  color: #0052a3;
+}
+
+.rich-text-display img {
+  max-width: 100%;
+  height: auto;
+  margin: 8px 0;
+  border-radius: 4px;
+}
+
+/* 颜色选择器样式 */
+.ql-toolbar.ql-snow .ql-formats button.ql-color::after,
+.ql-toolbar.ql-snow .ql-formats button.ql-background::after {
+  background: linear-gradient(to right, red, orange, yellow, green, blue, indigo, violet);
+}
+
+.ql-color-label {
+  background: linear-gradient(to right, red, orange, yellow, green, blue, indigo, violet);
+}
+
+.ql-background-label {
+  background: linear-gradient(to right, red, orange, yellow, green, blue, indigo, violet);
+}
