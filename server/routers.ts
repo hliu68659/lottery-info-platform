@@ -15,6 +15,7 @@ import {
   zodiacCards 
 } from "../drizzle/schema";
 import { eq } from "drizzle-orm";
+import { generateImageFromText, generateImageByType } from "./imageGeneration";
 
 // 管理员权限检查中间件
 const adminProcedure = protectedProcedure.use(({ ctx, next }) => {
@@ -360,6 +361,48 @@ export const appRouter = router({
         
         await database.delete(lotteryDraws).where(eq(lotteryDraws.id, input.id));
         return { success: true };
+      }),
+  }),
+
+  // ============ AI配图生成 ============
+  aiImage: router({
+    generateFromText: adminProcedure
+      .input(z.object({
+        text: z.string().min(1),
+        style: z.enum(["elegant", "mystical", "fortune", "wisdom", "nature"]).optional(),
+      }))
+      .mutation(async ({ input }) => {
+        try {
+          const result = await generateImageFromText(input.text, input.style);
+          return result;
+        } catch (error) {
+          throw new TRPCError({
+            code: 'INTERNAL_SERVER_ERROR',
+            message: `配图生成失败: ${error instanceof Error ? error.message : '\u672a\u77e5\u9519\u8bef'}`,
+          });
+        }
+      }),
+
+    generateByType: adminProcedure
+      .input(z.object({
+        title: z.string().min(1),
+        content: z.string().min(1),
+        type: z.enum(["text", "formula", "wisdom"]).optional(),
+      }))
+      .mutation(async ({ input }) => {
+        try {
+          const result = await generateImageByType(
+            input.title,
+            input.content,
+            input.type as any
+          );
+          return result;
+        } catch (error) {
+          throw new TRPCError({
+            code: 'INTERNAL_SERVER_ERROR',
+            message: `配图生成失败: ${error instanceof Error ? error.message : '\u672a\u77e5\u9519\u8bef'}`,
+          });
+        }
       }),
   }),
 

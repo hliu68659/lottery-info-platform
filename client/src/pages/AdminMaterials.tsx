@@ -19,6 +19,7 @@ import {
 import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
 import { Edit, Trash2, Plus, Eye, EyeOff } from "lucide-react";
+import { AIImageGeneratorDialog } from "@/components/AIImageGeneratorDialog";
 
 export default function AdminMaterials() {
   const { user } = useAuth();
@@ -267,11 +268,18 @@ export default function AdminMaterials() {
                   </div>
                   <div className="space-y-2">
                     <Label>图片URL</Label>
-                    <Input
-                      value={newImage.imageUrl}
-                      onChange={(e) => setNewImage({ ...newImage, imageUrl: e.target.value })}
-                      placeholder="https://..."
-                    />
+                    <div className="flex gap-2">
+                      <Input
+                        value={newImage.imageUrl}
+                        onChange={(e) => setNewImage({ ...newImage, imageUrl: e.target.value })}
+                        placeholder="https://..."
+                      />
+                      <AIImageGeneratorDialog
+                        title={newImage.title}
+                        content={newImage.description}
+                        onImageGenerated={(url) => setNewImage({ ...newImage, imageUrl: url })}
+                      />
+                    </div>
                   </div>
                   <div className="space-y-2">
                     <Label>描述</Label>
