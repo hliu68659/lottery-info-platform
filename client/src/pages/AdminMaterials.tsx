@@ -21,6 +21,7 @@ import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
 import { Edit, Trash2, Plus, Eye, EyeOff, ChevronUp, ChevronDown } from "lucide-react";
 import { AIImageGeneratorDialog } from "@/components/AIImageGeneratorDialog";
+import { SortableTextList, SortableImageList } from "@/components/SortableMaterialsList";
 
 export default function AdminMaterials() {
   const { user } = useAuth();
@@ -344,65 +345,29 @@ export default function AdminMaterials() {
             )}
 
             {/* 列表 */}
-            <div className="space-y-4">
-              {textBlocks && textBlocks.length > 0 && (
-                <div className="flex items-center gap-2 mb-2">
-                  <Checkbox
-                    checked={selectedTextIds.size === textBlocks.length && textBlocks.length > 0}
-                    onCheckedChange={selectAllText}
-                  />
-                  <Label className="text-sm cursor-pointer">全选</Label>
-                </div>
-              )}
-              {textBlocks?.map((block) => (
-                <Card key={block.id} className="card-elegant">
-                  <CardHeader>
-                    <div className="flex justify-between items-start">
-                      <div className="flex items-center gap-3 flex-1">
-                        <Checkbox
-                          checked={selectedTextIds.has(block.id)}
-                          onCheckedChange={() => toggleTextSelection(block.id)}
-                        />
-                        <CardTitle className="text-lg">{block.title}</CardTitle>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => toggleTextVisibility(block.id, block.visible)}
-                        >
-                          {block.visible ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => setEditingText(block)}
-                        >
-                          <Edit className="w-4 h-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => {
-                            if (confirm("确定删除？")) {
-                              deleteTextMutation.mutate({ id: block.id });
-                            }
-                          }}
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
-                      </div>
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-sm text-muted-foreground whitespace-pre-wrap">
-                      {block.content}
-                    </p>
-                    <p className="text-xs text-muted-foreground mt-2">显示顺序: {block.displayOrder}</p>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
+            {textBlocks && textBlocks.length > 0 ? (
+              <SortableTextList
+                items={textBlocks}
+                selectedIds={selectedTextIds}
+                onToggleSelect={toggleTextSelection}
+                onToggleVisibility={toggleTextVisibility}
+                onEdit={setEditingText}
+                onDelete={(id) => {
+                  if (confirm("确定删除？")) {
+                    deleteTextMutation.mutate({ id });
+                  }
+                }}
+                onReorder={(items) => {
+                  items.forEach(item => {
+                    updateTextMutation.mutate({ id: item.id, displayOrder: item.displayOrder });
+                  });
+                }}
+              />
+            ) : (
+              <div className="text-center py-8 text-muted-foreground">
+                暂无文字资料
+              </div>
+            )}
           </TabsContent>
 
           {/* 图片资料 */}
@@ -529,57 +494,28 @@ export default function AdminMaterials() {
             )}
 
             {/* 列表 */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {imageBlocks && imageBlocks.length > 0 && (
-                <div className="col-span-full flex items-center gap-2 mb-2">
-                  <Checkbox
-                    checked={selectedImageIds.size === imageBlocks.length && imageBlocks.length > 0}
-                    onCheckedChange={selectAllImage}
-                  />
-                  <Label className="text-sm cursor-pointer">全选</Label>
-                </div>
-              )}
-              {imageBlocks?.map((block) => (
-                <Card key={block.id} className="card-elegant relative">
-                  <div className="absolute top-2 left-2 z-10">
-                    <Checkbox
-                      checked={selectedImageIds.has(block.id)}
-                      onCheckedChange={() => toggleImageSelection(block.id)}
-                    />
-                  </div>
-                  <div className="aspect-video relative overflow-hidden">
-                    <img src={block.imageUrl} alt={block.title} className="w-full h-full object-cover" />
-                  </div>
-                  <CardContent className="p-4 space-y-2">
-                    <h3 className="font-semibold">{block.title}</h3>
-                    {block.description && (
-                      <p className="text-sm text-muted-foreground">{block.description}</p>
-                    )}
-                    <p className="text-xs text-muted-foreground">显示顺序: {block.displayOrder}</p>
-                    <div className="flex justify-end gap-2">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => toggleImageVisibility(block.id, block.visible)}
-                      >
-                        {block.visible ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => {
-                          if (confirm("确定删除？")) {
-                            deleteImageMutation.mutate({ id: block.id });
-                          }
-                        }}
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
+            {imageBlocks && imageBlocks.length > 0 ? (
+              <SortableImageList
+                items={imageBlocks}
+                selectedIds={selectedImageIds}
+                onToggleSelect={toggleImageSelection}
+                onToggleVisibility={toggleImageVisibility}
+                onDelete={(id) => {
+                  if (confirm("确定删除？")) {
+                    deleteImageMutation.mutate({ id });
+                  }
+                }}
+                onReorder={(items) => {
+                  items.forEach(item => {
+                    updateImageMutation.mutate({ id: item.id, displayOrder: item.displayOrder });
+                  });
+                }}
+              />
+            ) : (
+              <div className="text-center py-8 text-muted-foreground">
+                暂无图片资料
+              </div>
+            )}
           </TabsContent>
         </Tabs>
       </div>
