@@ -1,0 +1,38 @@
+{
+  "query": "\nSELECT 'users' as table_name, COUNT(*) as record_count FROM users\nUNION ALL\nSELECT 'text_blocks', COUNT(*) FROM text_blocks\nUNION ALL\nSELECT 'image_blocks', COUNT(*) FROM image_blocks\nUNION ALL\nSELECT 'number_attributes', COUNT(*) FROM number_attributes\nUNION ALL\nSELECT 'lottery_types', COUNT(*) FROM lottery_types\nUNION ALL\nSELECT 'lottery_draws', COUNT(*) FROM lottery_draws\nUNION ALL\nSELECT 'zodiac_cards', COUNT(*) FROM zodiac_cards;\n",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway03.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2pcRLaGQYcra4KS.root --database 2Med8dGTm85GozrpJFtDTP --execute \nSELECT 'users' as table_name, COUNT(*) as record_count FROM users\nUNION ALL\nSELECT 'text_blocks', COUNT(*) FROM text_blocks\nUNION ALL\nSELECT 'image_blocks', COUNT(*) FROM image_blocks\nUNION ALL\nSELECT 'number_attributes', COUNT(*) FROM number_attributes\nUNION ALL\nSELECT 'lottery_types', COUNT(*) FROM lottery_types\nUNION ALL\nSELECT 'lottery_draws', COUNT(*) FROM lottery_draws\nUNION ALL\nSELECT 'zodiac_cards', COUNT(*) FROM zodiac_cards;\n",
+  "rows": [
+    {
+      "table_name": "lottery_types",
+      "record_count": "4"
+    },
+    {
+      "table_name": "text_blocks",
+      "record_count": "7"
+    },
+    {
+      "table_name": "number_attributes",
+      "record_count": "49"
+    },
+    {
+      "table_name": "image_blocks",
+      "record_count": "5"
+    },
+    {
+      "table_name": "users",
+      "record_count": "1"
+    },
+    {
+      "table_name": "lottery_draws",
+      "record_count": "5"
+    },
+    {
+      "table_name": "zodiac_cards",
+      "record_count": "5"
+    }
+  ],
+  "messages": [],
+  "stdout": "table_name\trecord_count\nlottery_types\t4\ntext_blocks\t7\nnumber_attributes\t49\nimage_blocks\t5\nusers\t1\nlottery_draws\t5\nzodiac_cards\t5\n",
+  "stderr": "",
+  "execution_time_ms": 1506
+}

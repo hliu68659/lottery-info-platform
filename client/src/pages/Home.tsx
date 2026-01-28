@@ -1,4 +1,5 @@
 import { trpc } from "@/lib/trpc";
+import { useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { DrawDisplay } from "@/components/DrawDisplay";
@@ -26,6 +27,16 @@ export default function Home() {
   });
 
   const { data: lotteryTypes } = trpc.lotteryTypes.list.useQuery({ enabledOnly: true });
+  
+  // 每30秒自动刷新一次开奖数据
+  useEffect(() => {
+    const timer = setInterval(() => {
+      // 重新获取所有查询数据
+      window.location.reload();
+    }, 30000);
+
+    return () => clearInterval(timer);
+  }, []);
   
   // 获取各个彩票的最新开奖记录
   const xinaoMidnight = lotteryTypes?.find(t => t.code === "xinao_midnight");

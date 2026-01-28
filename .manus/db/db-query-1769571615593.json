@@ -1,0 +1,58 @@
+{
+  "query": "\n-- 检查所有表是否存在\nSHOW TABLES;\n\n-- 检查每个表的记录数\nSELECT 'users' as table_name, COUNT(*) as record_count FROM users\nUNION ALL\nSELECT 'text_blocks', COUNT(*) FROM text_blocks\nUNION ALL\nSELECT 'image_blocks', COUNT(*) FROM image_blocks\nUNION ALL\nSELECT 'number_attributes', COUNT(*) FROM number_attributes\nUNION ALL\nSELECT 'lottery_types', COUNT(*) FROM lottery_types\nUNION ALL\nSELECT 'lottery_draws', COUNT(*) FROM lottery_draws\nUNION ALL\nSELECT 'zodiac_cards', COUNT(*) FROM zodiac_cards;\n",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway03.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2pcRLaGQYcra4KS.root --database 2Med8dGTm85GozrpJFtDTP --execute \n-- 检查所有表是否存在\nSHOW TABLES;\n\n-- 检查每个表的记录数\nSELECT 'users' as table_name, COUNT(*) as record_count FROM users\nUNION ALL\nSELECT 'text_blocks', COUNT(*) FROM text_blocks\nUNION ALL\nSELECT 'image_blocks', COUNT(*) FROM image_blocks\nUNION ALL\nSELECT 'number_attributes', COUNT(*) FROM number_attributes\nUNION ALL\nSELECT 'lottery_types', COUNT(*) FROM lottery_types\nUNION ALL\nSELECT 'lottery_draws', COUNT(*) FROM lottery_draws\nUNION ALL\nSELECT 'zodiac_cards', COUNT(*) FROM zodiac_cards;\n",
+  "rows": [
+    {
+      "Tables_in_2Med8dGTm85GozrpJFtDTP": "__drizzle_migrations"
+    },
+    {
+      "Tables_in_2Med8dGTm85GozrpJFtDTP": "image_blocks"
+    },
+    {
+      "Tables_in_2Med8dGTm85GozrpJFtDTP": "lottery_draws"
+    },
+    {
+      "Tables_in_2Med8dGTm85GozrpJFtDTP": "lottery_types"
+    },
+    {
+      "Tables_in_2Med8dGTm85GozrpJFtDTP": "number_attributes"
+    },
+    {
+      "Tables_in_2Med8dGTm85GozrpJFtDTP": "text_blocks"
+    },
+    {
+      "Tables_in_2Med8dGTm85GozrpJFtDTP": "users"
+    },
+    {
+      "Tables_in_2Med8dGTm85GozrpJFtDTP": "zodiac_cards"
+    },
+    {
+      "Tables_in_2Med8dGTm85GozrpJFtDTP": "table_name\trecord_count"
+    },
+    {
+      "Tables_in_2Med8dGTm85GozrpJFtDTP": "users\t1"
+    },
+    {
+      "Tables_in_2Med8dGTm85GozrpJFtDTP": "text_blocks\t7"
+    },
+    {
+      "Tables_in_2Med8dGTm85GozrpJFtDTP": "number_attributes\t49"
+    },
+    {
+      "Tables_in_2Med8dGTm85GozrpJFtDTP": "image_blocks\t5"
+    },
+    {
+      "Tables_in_2Med8dGTm85GozrpJFtDTP": "lottery_types\t4"
+    },
+    {
+      "Tables_in_2Med8dGTm85GozrpJFtDTP": "lottery_draws\t5"
+    },
+    {
+      "Tables_in_2Med8dGTm85GozrpJFtDTP": "zodiac_cards\t5"
+    }
+  ],
+  "messages": [],
+  "stdout": "Tables_in_2Med8dGTm85GozrpJFtDTP\n__drizzle_migrations\nimage_blocks\nlottery_draws\nlottery_types\nnumber_attributes\ntext_blocks\nusers\nzodiac_cards\ntable_name\trecord_count\nusers\t1\ntext_blocks\t7\nnumber_attributes\t49\nimage_blocks\t5\nlottery_types\t4\nlottery_draws\t5\nzodiac_cards\t5\n",
+  "stderr": "",
+  "execution_time_ms": 1863
+}

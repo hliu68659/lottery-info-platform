@@ -1,0 +1,58 @@
+{
+  "query": "SELECT * FROM lottery_types;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway03.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2pcRLaGQYcra4KS.root --database 2Med8dGTm85GozrpJFtDTP --execute SELECT * FROM lottery_types;",
+  "rows": [
+    {
+      "id": "1",
+      "code": "xinao_midnight",
+      "name": "新澳午夜彩",
+      "isCustom": "1",
+      "apiUrl": "NULL",
+      "intervalHours": "2",
+      "displayOrder": "1",
+      "enabled": "1",
+      "createdAt": "2026-01-28 01:29:15",
+      "updatedAt": "2026-01-28 01:29:15"
+    },
+    {
+      "id": "2",
+      "code": "xinao",
+      "name": "新奥彩",
+      "isCustom": "0",
+      "apiUrl": "https://api.example.com/xinao",
+      "intervalHours": "24",
+      "displayOrder": "2",
+      "enabled": "1",
+      "createdAt": "2026-01-28 01:29:15",
+      "updatedAt": "2026-01-28 01:29:15"
+    },
+    {
+      "id": "3",
+      "code": "hongkong",
+      "name": "香港彩",
+      "isCustom": "0",
+      "apiUrl": "https://api.example.com/hongkong",
+      "intervalHours": "24",
+      "displayOrder": "3",
+      "enabled": "1",
+      "createdAt": "2026-01-28 01:29:15",
+      "updatedAt": "2026-01-28 01:29:15"
+    },
+    {
+      "id": "4",
+      "code": "laoao",
+      "name": "老澳彩",
+      "isCustom": "0",
+      "apiUrl": "https://api.example.com/laoao",
+      "intervalHours": "24",
+      "displayOrder": "4",
+      "enabled": "1",
+      "createdAt": "2026-01-28 01:29:15",
+      "updatedAt": "2026-01-28 01:29:15"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tcode\tname\tisCustom\tapiUrl\tintervalHours\tdisplayOrder\tenabled\tcreatedAt\tupdatedAt\n1\txinao_midnight\t新澳午夜彩\t1\tNULL\t2\t1\t1\t2026-01-28 01:29:15\t2026-01-28 01:29:15\n2\txinao\t新奥彩\t0\thttps://api.example.com/xinao\t24\t2\t1\t2026-01-28 01:29:15\t2026-01-28 01:29:15\n3\thongkong\t香港彩\t0\thttps://api.example.com/hongkong\t24\t3\t1\t2026-01-28 01:29:15\t2026-01-28 01:29:15\n4\tlaoao\t老澳彩\t0\thttps://api.example.com/laoao\t24\t4\t1\t2026-01-28 01:29:15\t2026-01-28 01:29:15\n",
+  "stderr": "",
+  "execution_time_ms": 1494
+}

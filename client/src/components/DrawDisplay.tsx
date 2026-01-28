@@ -1,7 +1,8 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { LotteryBall } from "./LotteryBall";
 import { DrawCountdown } from "./DrawCountdown";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
+import { Clock, CheckCircle2, Zap } from "lucide-react";
 import type { LotteryDraw } from "../../../drizzle/schema";
 
 interface DrawDisplayProps {
@@ -18,6 +19,32 @@ export function DrawDisplay({ lotteryName, draw, isCustom = false }: DrawDisplay
     visible: boolean;
   }>>([]);
   const [isDrawing, setIsDrawing] = useState(false);
+  const [timeUntilDraw, setTimeUntilDraw] = useState<number | null>(null);
+  const [isSyncingPhase, setIsSyncingPhase] = useState(false);
+
+  // 计算距离开奖的时间
+  const updateTimeUntilDraw = useCallback(() => {
+    if (!draw) {
+      setTimeUntilDraw(null);
+      setIsSyncingPhase(false);
+      return;
+    }
+
+    const now = new Date().getTime();
+    const drawTime = new Date(draw.drawTime).getTime();
+    const threeMinutesBefore = drawTime - 3 * 60 * 1000;
+
+    if (draw.status === "pending") {
+      const timeLeft = drawTime - now;
+      setTimeUntilDraw(Math.max(0, timeLeft));
+      
+      // 检查是否在同步阶段（开奖前3分钟）
+      setIsSyncingPhase(now >= threeMinutesBefore && now < drawTime);
+    } else {
+      setTimeUntilDraw(null);
+      setIsSyncingPhase(false);
+    }
+  }, [draw]);
 
   useEffect(() => {
     if (!draw) {
@@ -32,10 +59,10 @@ export function DrawDisplay({ lotteryName, draw, isCustom = false }: DrawDisplay
 
     // 如果是待开奖状态且在开奖前3分钟内
     if (draw.status === "pending" && now >= threeMinutesBefore && now < drawTime) {
-      // 显示"官方开奖同步中"
+      // 显示"官方开奖同步中" - 灰色球体
       const syncText = ["官", "方", "开", "奖", "同", "步", "中"];
-      setDisplayNumbers(syncText.map((text, index) => ({
-        text: index < 7 ? text : "中",
+      setDisplayNumbers(syncText.map((text) => ({
+        text,
         color: "gray" as const,
         visible: true,
       })));
@@ -54,7 +81,7 @@ export function DrawDisplay({ lotteryName, draw, isCustom = false }: DrawDisplay
       ];
 
       // 初始化所有号码为不可见
-      setDisplayNumbers(numbers.map((num, index) => ({
+      setDisplayNumbers(numbers.map((num) => ({
         number: num.number || undefined,
         color: num.color || "gray",
         visible: false,
@@ -97,7 +124,22 @@ export function DrawDisplay({ lotteryName, draw, isCustom = false }: DrawDisplay
       setDisplayNumbers(Array(7).fill({ visible: true, color: "gray" as const, text: "?" }));
       setIsDrawing(false);
     }
-  }, [draw]);
+
+    updateTimeUntilDraw();
+  }, [draw, updateTimeUntilDraw]);
+
+  // 每秒更新倒计时
+  useEffect(() => {
+    const timer = setInterval(updateTimeUntilDraw, 1000);
+    return () => clearInterval(timer);
+  }, [updateTimeUntilDraw]);
+
+  const formatTimeLeft = (ms: number) => {
+    const hours = Math.floor(ms / 3600000);
+    const minutes = Math.floor((ms % 3600000) / 60000);
+    const seconds = Math.floor((ms % 60000) / 1000);
+    return `${hours}小时${minutes}分钟${seconds}秒`;
+  };
 
   return (
     <Card className="card-elegant">
@@ -116,6 +158,30 @@ export function DrawDisplay({ lotteryName, draw, isCustom = false }: DrawDisplay
             <div className="text-sm text-muted-foreground">
               开奖时间: {new Date(draw.drawTime).toLocaleString('zh-CN')}
             </div>
+            
+            {/* 倒计时显示 */}
+            {draw.status === "pending" && timeUntilDraw !== null && (
+              <div className="flex items-center justify-center gap-2 text-sm font-medium text-primary mt-3">
+                <Clock className="w-4 h-4" />
+                <span>{formatTimeLeft(timeUntilDraw)}后开奖</span>
+              </div>
+            )}
+            
+            {/* 同步阶段提示 */}
+            {isSyncingPhase && (
+              <div className="flex items-center justify-center gap-2 text-xs text-yellow-600 font-medium animate-pulse">
+                <Zap className="w-3 h-3" />
+                官方开奖数据同步中...
+              </div>
+            )}
+            
+            {/* 已完成提示 */}
+            {draw.status === "completed" && (
+              <div className="flex items-center justify-center gap-2 text-sm text-green-600 font-medium">
+                <CheckCircle2 className="w-4 h-4" />
+                <span>开奖已完成</span>
+              </div>
+            )}
           </div>
         )}
 
@@ -147,16 +213,16 @@ export function DrawDisplay({ lotteryName, draw, isCustom = false }: DrawDisplay
           )}
         </div>
 
-        {/* 倒计时 */}
+        {/* 下期倒计时 */}
         {draw && draw.nextDrawTime && draw.status === "completed" && (
-          <div className="text-center space-y-2">
-            <div className="text-sm text-muted-foreground">距离下期开奖</div>
+          <div className="text-center space-y-3 pt-4 border-t border-border">
+            <div className="text-sm font-medium text-muted-foreground">距离下期开奖</div>
             <DrawCountdown targetTime={draw.nextDrawTime} />
           </div>
         )}
 
         {/* 状态提示 */}
-        {draw && draw.status === "pending" && (
+        {draw && draw.status === "pending" && !isSyncingPhase && (
           <div className="text-center">
             <span className="inline-block px-4 py-2 bg-yellow-100 text-yellow-800 rounded-full text-sm font-medium">
               等待开奖
