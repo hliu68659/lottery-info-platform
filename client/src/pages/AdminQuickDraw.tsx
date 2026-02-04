@@ -22,6 +22,27 @@ export default function AdminQuickDraw() {
   const [nextDrawTime, setNextDrawTime] = useState<string>("");
   const [nextDrawWeek, setNextDrawWeek] = useState<string>("星期四");
   const [year, setYear] = useState<string>(new Date().getFullYear().toString());
+  const [duplicateNumbers, setDuplicateNumbers] = useState<Set<number>>(new Set());
+
+  // 检查号码是否重复
+  const checkDuplicateNumbers = (nums: string[]) => {
+    const validNumbers = nums
+      .map(n => parseInt(n))
+      .filter(n => !isNaN(n) && n >= 1 && n <= 49);
+    
+    const seen = new Set<number>();
+    const duplicates = new Set<number>();
+    
+    validNumbers.forEach(num => {
+      if (seen.has(num)) {
+        duplicates.add(num);
+      }
+      seen.add(num);
+    });
+    
+    setDuplicateNumbers(duplicates);
+    return duplicates.size === 0;
+  };
 
   const { data: lotteryTypes } = trpc.lotteryTypes.list.useQuery({ enabledOnly: true });
 
@@ -48,6 +69,9 @@ export default function AdminQuickDraw() {
     const newNumbers = [...numbers];
     newNumbers[index] = value;
     setNumbers(newNumbers);
+    
+    // 检查是否有重复号码
+    checkDuplicateNumbers(newNumbers);
 
     // 自动识别号码属性
     const num = parseInt(value);
@@ -85,6 +109,13 @@ export default function AdminQuickDraw() {
       return;
     }
 
+    // 检查是否有重复号码
+    if (!checkDuplicateNumbers(numbers)) {
+      const duplicateList = Array.from(duplicateNumbers).join(", ");
+      toast.error(`号码重复: ${duplicateList}，请修改后重试`);
+      return;
+    }
+
     createDrawMutation.mutate({
       lotteryTypeId,
       issueNumber,
@@ -103,6 +134,7 @@ export default function AdminQuickDraw() {
     setNextDrawTime("");
     setNextDrawWeek("星期四");
     setYear(new Date().getFullYear().toString());
+    setDuplicateNumbers(new Set());
   };
 
   return (
@@ -247,21 +279,29 @@ export default function AdminQuickDraw() {
                     { label: "号码4", index: 3 },
                     { label: "号码5", index: 4 },
                     { label: "号码6", index: 5 },
-                  ].map((item) => (
-                    <div key={item.index} className="grid grid-cols-3 gap-4 items-center">
-                      <Label className="text-sm">{item.label}</Label>
-                      <div className="col-span-2">
-                        <Input
-                          type="number"
-                          min="1"
-                          max="49"
-                          value={numbers[item.index]}
-                          onChange={(e) => handleNumberChange(item.index, e.target.value)}
-                          placeholder="1-49"
-                        />
+                  ].map((item) => {
+                    const num = parseInt(numbers[item.index]);
+                    const isDuplicate = !isNaN(num) && duplicateNumbers.has(num);
+                    return (
+                      <div key={item.index} className="grid grid-cols-3 gap-4 items-center">
+                        <Label className="text-sm">{item.label}</Label>
+                        <div className="col-span-2">
+                          <Input
+                            type="number"
+                            min="1"
+                            max="49"
+                            value={numbers[item.index]}
+                            onChange={(e) => handleNumberChange(item.index, e.target.value)}
+                            placeholder="1-49"
+                            className={isDuplicate ? "border-red-500 border-2" : ""}
+                          />
+                          {isDuplicate && (
+                            <p className="text-red-500 text-xs mt-1">⚠️ 号码重复</p>
+                          )}
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
 
@@ -269,14 +309,26 @@ export default function AdminQuickDraw() {
               <div className="grid grid-cols-3 gap-4 items-center border-b pb-4">
                 <Label className="font-semibold">特码</Label>
                 <div className="col-span-2">
-                  <Input
-                    type="number"
-                    min="1"
-                    max="49"
-                    value={numbers[6]}
-                    onChange={(e) => handleNumberChange(6, e.target.value)}
-                    placeholder="1-49"
-                  />
+                  {(() => {
+                    const num = parseInt(numbers[6]);
+                    const isDuplicate = !isNaN(num) && duplicateNumbers.has(num);
+                    return (
+                      <>
+                        <Input
+                          type="number"
+                          min="1"
+                          max="49"
+                          value={numbers[6]}
+                          onChange={(e) => handleNumberChange(6, e.target.value)}
+                          placeholder="1-49"
+                          className={isDuplicate ? "border-red-500 border-2" : ""}
+                        />
+                        {isDuplicate && (
+                          <p className="text-red-500 text-xs mt-1">⚠️ 号码重复</p>
+                        )}
+                      </>
+                    );
+                  })()}
                 </div>
               </div>
 
@@ -319,7 +371,7 @@ export default function AdminQuickDraw() {
               </Button>
               <Button
                 onClick={handleSubmit}
-                disabled={createDrawMutation.isPending}
+                disabled={createDrawMutation.isPending || duplicateNumbers.size > 0}
                 className="bg-blue-600 hover:bg-blue-700"
               >
                 {createDrawMutation.isPending ? "提交中..." : "确定"}
