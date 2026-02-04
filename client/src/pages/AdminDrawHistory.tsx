@@ -22,7 +22,16 @@ export default function AdminDrawHistory() {
   const { user } = useAuth();
   const [selectedLotteryId, setSelectedLotteryId] = useState<number | null>(null);
   const [editingDraw, setEditingDraw] = useState<any>(null);
-  const [editNumbers, setEditNumbers] = useState<string[]>(Array(7).fill(""));
+  const [editFormData, setEditFormData] = useState<{
+    issueNumber: string;
+    drawTime: string;
+    numbers: string[];
+  }>({
+    issueNumber: "",
+    drawTime: "",
+    numbers: Array(7).fill(""),
+  });
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
 
   const { data: lotteryTypes } = trpc.lotteryTypes.list.useQuery({ enabledOnly: true });
   const { data: draws, refetch } = trpc.lotteryDraws.list.useQuery(
@@ -34,6 +43,7 @@ export default function AdminDrawHistory() {
     onSuccess: () => {
       toast.success("更新成功");
       setEditingDraw(null);
+      setIsDialogOpen(false);
       refetch();
     },
     onError: (error) => {
@@ -53,28 +63,55 @@ export default function AdminDrawHistory() {
 
   const handleEdit = (draw: any) => {
     setEditingDraw(draw);
-    setEditNumbers([
-      draw.number1?.toString() || "",
-      draw.number2?.toString() || "",
-      draw.number3?.toString() || "",
-      draw.number4?.toString() || "",
-      draw.number5?.toString() || "",
-      draw.number6?.toString() || "",
-      draw.specialNumber?.toString() || "",
-    ]);
+    setEditFormData({
+      issueNumber: draw.issueNumber || "",
+      drawTime: new Date(draw.drawTime).toISOString().slice(0, 16),
+      numbers: [
+        draw.number1?.toString() || "",
+        draw.number2?.toString() || "",
+        draw.number3?.toString() || "",
+        draw.number4?.toString() || "",
+        draw.number5?.toString() || "",
+        draw.number6?.toString() || "",
+        draw.specialNumber?.toString() || "",
+      ],
+    });
+    setIsDialogOpen(true);
   };
 
   const handleUpdate = () => {
     if (!editingDraw) return;
 
-    const nums = editNumbers.map(n => parseInt(n)).filter(n => !isNaN(n) && n >= 1 && n <= 49);
+    // 验证期号
+    if (!editFormData.issueNumber.trim()) {
+      toast.error("请输入期号");
+      return;
+    }
+
+    // 验证开奖时间
+    if (!editFormData.drawTime) {
+      toast.error("请选择开奖时间");
+      return;
+    }
+
+    // 验证号码
+    const nums = editFormData.numbers.map(n => parseInt(n)).filter(n => !isNaN(n) && n >= 1 && n <= 49);
     if (nums.length !== 7) {
       toast.error("请输入7个有效号码(1-49)");
       return;
     }
 
+    // 检查号码是否重复
+    const uniqueNums = new Set(nums);
+    if (uniqueNums.size !== 7) {
+      toast.error("号码不能重复");
+      return;
+    }
+
     updateDrawMutation.mutate({
       id: editingDraw.id,
+      issueNumber: editFormData.issueNumber.trim(),
+      drawTime: new Date(editFormData.drawTime),
       numbers: nums,
     });
   };
@@ -85,7 +122,11 @@ export default function AdminDrawHistory() {
     }
   };
 
-  // 权限检查已由 AdminRoute 组件处理
+  const handleNumberChange = (index: number, value: string) => {
+    const newNumbers = [...editFormData.numbers];
+    newNumbers[index] = value;
+    setEditFormData({ ...editFormData, numbers: newNumbers });
+  };
 
   return (
     <DashboardLayout>
@@ -142,60 +183,93 @@ export default function AdminDrawHistory() {
                       }`}>
                         {draw.status === "completed" ? "已开奖" : draw.status === "drawing" ? "开奖中" : "未开奖"}
                       </span>
-                      <Dialog>
+                      <Dialog open={isDialogOpen && editingDraw?.id === draw.id} onOpenChange={(open) => {
+                        if (!open) {
+                          setEditingDraw(null);
+                          setIsDialogOpen(false);
+                        }
+                      }}>
                         <DialogTrigger asChild>
                           <Button
                             variant="outline"
                             size="sm"
                             onClick={() => handleEdit(draw)}
-                            disabled={draw.status === "completed"}
                           >
                             <Edit className="w-4 h-4 mr-1" />
                             编辑
                           </Button>
                         </DialogTrigger>
-                        <DialogContent>
+                        <DialogContent className="max-w-2xl">
                           <DialogHeader>
                             <DialogTitle>编辑开奖记录</DialogTitle>
                           </DialogHeader>
-                          <div className="space-y-4">
+                          <div className="space-y-6">
+                            {/* 期号和时间 */}
                             <div className="grid grid-cols-2 gap-4">
-                              {editNumbers.slice(0, 6).map((num, index) => (
-                                <div key={index} className="space-y-2">
-                                  <Label>号码 {index + 1}</Label>
-                                  <Input
-                                    type="number"
-                                    min="1"
-                                    max="49"
-                                    value={num}
-                                    onChange={(e) => {
-                                      const newNumbers = [...editNumbers];
-                                      newNumbers[index] = e.target.value;
-                                      setEditNumbers(newNumbers);
-                                    }}
-                                  />
-                                </div>
-                              ))}
+                              <div className="space-y-2">
+                                <Label>期号</Label>
+                                <Input
+                                  value={editFormData.issueNumber}
+                                  onChange={(e) => setEditFormData({ ...editFormData, issueNumber: e.target.value })}
+                                  placeholder="例如: 001"
+                                />
+                              </div>
+                              <div className="space-y-2">
+                                <Label>开奖时间</Label>
+                                <Input
+                                  type="datetime-local"
+                                  value={editFormData.drawTime}
+                                  onChange={(e) => setEditFormData({ ...editFormData, drawTime: e.target.value })}
+                                />
+                              </div>
                             </div>
-                            <div className="space-y-2">
-                              <Label>特码</Label>
-                              <Input
-                                type="number"
-                                min="1"
-                                max="49"
-                                value={editNumbers[6]}
-                                onChange={(e) => {
-                                  const newNumbers = [...editNumbers];
-                                  newNumbers[6] = e.target.value;
-                                  setEditNumbers(newNumbers);
+
+                            {/* 号码输入 */}
+                            <div className="space-y-4">
+                              <Label className="text-base font-semibold">开奖号码</Label>
+                              <div className="grid grid-cols-3 gap-4">
+                                {editFormData.numbers.slice(0, 6).map((num, index) => (
+                                  <div key={index} className="space-y-2">
+                                    <Label className="text-sm">号码 {index + 1}</Label>
+                                    <Input
+                                      type="number"
+                                      min="1"
+                                      max="49"
+                                      value={num}
+                                      onChange={(e) => handleNumberChange(index, e.target.value)}
+                                      placeholder="1-49"
+                                    />
+                                  </div>
+                                ))}
+                              </div>
+                              <div className="space-y-2">
+                                <Label className="text-sm">特码</Label>
+                                <Input
+                                  type="number"
+                                  min="1"
+                                  max="49"
+                                  value={editFormData.numbers[6]}
+                                  onChange={(e) => handleNumberChange(6, e.target.value)}
+                                  placeholder="1-49"
+                                />
+                              </div>
+                            </div>
+
+                            {/* 按钮 */}
+                            <div className="flex justify-end gap-2 pt-4">
+                              <Button 
+                                variant="outline" 
+                                onClick={() => {
+                                  setEditingDraw(null);
+                                  setIsDialogOpen(false);
                                 }}
-                              />
-                            </div>
-                            <div className="flex justify-end gap-2">
-                              <Button variant="outline" onClick={() => setEditingDraw(null)}>
+                              >
                                 取消
                               </Button>
-                              <Button onClick={handleUpdate} disabled={updateDrawMutation.isPending}>
+                              <Button 
+                                onClick={handleUpdate} 
+                                disabled={updateDrawMutation.isPending}
+                              >
                                 {updateDrawMutation.isPending ? "保存中..." : "保存"}
                               </Button>
                             </div>

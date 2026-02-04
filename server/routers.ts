@@ -320,8 +320,9 @@ export const appRouter = router({
     update: adminProcedure
       .input(z.object({
         id: z.number(),
-        numbers: z.array(z.number().min(1).max(49)).length(7).optional(),
+        issueNumber: z.string().optional(),
         drawTime: z.date().optional(),
+        numbers: z.array(z.number().min(1).max(49)).length(7).optional(),
         status: z.enum(["pending", "drawing", "completed"]).optional(),
       }))
       .mutation(async ({ input }) => {
@@ -329,6 +330,10 @@ export const appRouter = router({
         if (!database) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: '数据库不可用' });
         
         const updates: any = {};
+        
+        if (input.issueNumber) {
+          updates.issueNumber = input.issueNumber;
+        }
         
         if (input.drawTime) {
           updates.drawTime = input.drawTime;
