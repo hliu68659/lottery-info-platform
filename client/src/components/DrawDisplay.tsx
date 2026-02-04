@@ -64,8 +64,8 @@ export function DrawDisplay({ lotteryName, draw, isCustom = false }: DrawDisplay
 
     // 如果是待开奖状态且在开奖前3分钟内
     if (draw.status === "pending" && now >= threeMinutesBefore && now < drawTime) {
-      // 显示"官方开奖同步中" - 灰色球体
-      const syncText = ["官", "方", "开", "奖", "同", "步", "中"];
+      // 显示"官方开奖摇珠中" - 灰色球体
+      const syncText = ["官", "方", "开", "奖", "摇", "珠", "中"];
       setDisplayNumbers(syncText.map((text) => ({
         text,
         color: "gray" as const,
@@ -189,7 +189,7 @@ export function DrawDisplay({ lotteryName, draw, isCustom = false }: DrawDisplay
             {isSyncingPhase && (
               <div className="flex items-center justify-center gap-2 text-xs text-yellow-600 font-medium animate-pulse">
                 <Zap className="w-3 h-3" />
-                官方开奖数据同步中...
+                官方开奖摇珠中...
               </div>
             )}
             
