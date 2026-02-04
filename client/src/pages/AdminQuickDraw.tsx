@@ -15,8 +15,13 @@ export default function AdminQuickDraw() {
   const [lotteryTypeId, setLotteryTypeId] = useState<number | null>(null);
   const [issueNumber, setIssueNumber] = useState<string>("");
   const [drawTime, setDrawTime] = useState<string>("");
+  const [drawStatus, setDrawStatus] = useState<"未开" | "开奖中" | "已开">("未开");
+  const [autoDrawEnabled, setAutoDrawEnabled] = useState<boolean>(false);
   const [numbers, setNumbers] = useState<string[]>(Array(7).fill(""));
   const [attributes, setAttributes] = useState<Array<{ zodiac?: string; color?: string }>>([]);
+  const [nextDrawTime, setNextDrawTime] = useState<string>("");
+  const [nextDrawWeek, setNextDrawWeek] = useState<string>("星期四");
+  const [year, setYear] = useState<string>(new Date().getFullYear().toString());
 
   const { data: lotteryTypes } = trpc.lotteryTypes.list.useQuery({ enabledOnly: true });
 
@@ -25,8 +30,12 @@ export default function AdminQuickDraw() {
       toast.success(`开奖录入成功！期号: ${data.issueNumber}`);
       setIssueNumber("");
       setDrawTime("");
+      setDrawStatus("未开");
+      setAutoDrawEnabled(false);
       setNumbers(Array(7).fill(""));
       setAttributes([]);
+      setNextDrawTime("");
+      setNextDrawWeek("星期四");
     },
     onError: (error) => {
       toast.error(`录入失败: ${error.message}`);
@@ -84,94 +93,182 @@ export default function AdminQuickDraw() {
     });
   };
 
+  const handleReset = () => {
+    setIssueNumber("");
+    setDrawTime("");
+    setDrawStatus("未开");
+    setAutoDrawEnabled(false);
+    setNumbers(Array(7).fill(""));
+    setAttributes([]);
+    setNextDrawTime("");
+    setNextDrawWeek("星期四");
+    setYear(new Date().getFullYear().toString());
+  };
+
   return (
     <DashboardLayout>
       <div className="space-y-6">
         <div>
-          <h1 className="text-3xl font-bold">快捷开奖</h1>
+          <h1 className="text-3xl font-bold">手动开奖</h1>
           <p className="text-muted-foreground mt-2">快速录入新一期开奖结果</p>
         </div>
 
         <Card className="card-elegant">
-          <CardHeader>
-            <CardTitle>开奖信息</CardTitle>
+          <CardHeader className="bg-blue-600 text-white rounded-t-lg">
+            <CardTitle className="text-white">开奖信息</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-6">
-            {/* 彩票类型选择 */}
-            <div className="space-y-2">
-              <Label>彩票类型</Label>
-              <Select
-                value={lotteryTypeId?.toString() || ""}
-                onValueChange={(value) => setLotteryTypeId(Number(value))}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="请选择彩票类型" />
-                </SelectTrigger>
-                <SelectContent>
-                  {lotteryTypes?.filter(t => t.isCustom).map((type) => (
-                    <SelectItem key={type.id} value={type.id.toString()}>
-                      {type.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* 期号和开奖时间手动输入 */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label>期号</Label>
-                <Input
-                  type="text"
-                  value={issueNumber}
-                  onChange={(e) => setIssueNumber(e.target.value)}
-                  placeholder="例如: 001"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>开奖时间</Label>
-                <Input
-                  type="datetime-local"
-                  value={drawTime}
-                  onChange={(e) => setDrawTime(e.target.value)}
-                />
-              </div>
-            </div>
-
-            {/* 号码输入 */}
+          <CardContent className="p-6">
+            {/* 表单式布局 */}
             <div className="space-y-4">
-              <Label>开奖号码</Label>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                {numbers.slice(0, 6).map((num, index) => (
-                  <div key={index} className="space-y-2">
-                    <Label className="text-sm">号码 {index + 1}</Label>
-                    <Input
-                      type="number"
-                      min="1"
-                      max="49"
-                      value={num}
-                      onChange={(e) => handleNumberChange(index, e.target.value)}
-                      placeholder="1-49"
-                    />
-                    {attributes[index] && (
-                      <div className="flex items-center gap-2">
-                        <LotteryBall
-                          number={parseInt(num)}
-                          color={attributes[index].color as any}
-                          className="w-8 h-8 text-xs"
-                        />
-                        <span className="text-xs text-muted-foreground">
-                          {attributes[index].zodiac}
-                        </span>
-                      </div>
-                    )}
-                  </div>
-                ))}
+              {/* 彩票类型选择 */}
+              <div className="grid grid-cols-3 gap-4 items-center border-b pb-4">
+                <Label className="font-semibold">彩票类型</Label>
+                <div className="col-span-2">
+                  <Select
+                    value={lotteryTypeId?.toString() || ""}
+                    onValueChange={(value) => setLotteryTypeId(Number(value))}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="请选择彩票类型" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {lotteryTypes?.filter(t => t.isCustom).map((type) => (
+                        <SelectItem key={type.id} value={type.id.toString()}>
+                          {type.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
 
-              <div className="space-y-2">
-                <Label className="text-sm">特码</Label>
-                <div className="flex items-start gap-4">
+              {/* 期号 */}
+              <div className="grid grid-cols-3 gap-4 items-center border-b pb-4">
+                <Label className="font-semibold">期号</Label>
+                <div className="col-span-2">
+                  <Input
+                    type="text"
+                    value={issueNumber}
+                    onChange={(e) => setIssueNumber(e.target.value)}
+                    placeholder="例如: 001"
+                  />
+                </div>
+              </div>
+
+              {/* 开奖时间 */}
+              <div className="grid grid-cols-3 gap-4 items-center border-b pb-4">
+                <Label className="font-semibold">开奖时间</Label>
+                <div className="col-span-2">
+                  <Input
+                    type="datetime-local"
+                    value={drawTime}
+                    onChange={(e) => setDrawTime(e.target.value)}
+                  />
+                </div>
+              </div>
+
+              {/* 开奖状态 */}
+              <div className="grid grid-cols-3 gap-4 items-center border-b pb-4">
+                <Label className="font-semibold">开奖状态</Label>
+                <div className="col-span-2 flex items-center gap-6">
+                  <label className="flex items-center gap-2">
+                    <input
+                      type="radio"
+                      name="drawStatus"
+                      value="未开"
+                      checked={drawStatus === "未开"}
+                      onChange={(e) => setDrawStatus(e.target.value as any)}
+                      className="w-4 h-4"
+                    />
+                    <span>未开</span>
+                  </label>
+                  <label className="flex items-center gap-2">
+                    <input
+                      type="radio"
+                      name="drawStatus"
+                      value="开奖中"
+                      checked={drawStatus === "开奖中"}
+                      onChange={(e) => setDrawStatus(e.target.value as any)}
+                      className="w-4 h-4"
+                    />
+                    <span>开奖中</span>
+                  </label>
+                  <label className="flex items-center gap-2">
+                    <input
+                      type="radio"
+                      name="drawStatus"
+                      value="已开"
+                      checked={drawStatus === "已开"}
+                      onChange={(e) => setDrawStatus(e.target.value as any)}
+                      className="w-4 h-4"
+                    />
+                    <span>已开</span>
+                  </label>
+                </div>
+              </div>
+
+              {/* 自动开奖 */}
+              <div className="grid grid-cols-3 gap-4 items-center border-b pb-4">
+                <Label className="font-semibold">自动开奖</Label>
+                <div className="col-span-2 flex items-center gap-6">
+                  <label className="flex items-center gap-2">
+                    <input
+                      type="radio"
+                      name="autoDraw"
+                      value="auto"
+                      checked={autoDrawEnabled}
+                      onChange={() => setAutoDrawEnabled(true)}
+                      className="w-4 h-4"
+                    />
+                    <span>自动</span>
+                  </label>
+                  <label className="flex items-center gap-2">
+                    <input
+                      type="radio"
+                      name="autoDraw"
+                      value="manual"
+                      checked={!autoDrawEnabled}
+                      onChange={() => setAutoDrawEnabled(false)}
+                      className="w-4 h-4"
+                    />
+                    <span>手动</span>
+                  </label>
+                </div>
+              </div>
+
+              {/* 号码输入 */}
+              <div className="border-b pb-4">
+                <Label className="font-semibold block mb-4">号码输入</Label>
+                <div className="space-y-3">
+                  {[
+                    { label: "号码1", index: 0 },
+                    { label: "号码2", index: 1 },
+                    { label: "号码3", index: 2 },
+                    { label: "号码4", index: 3 },
+                    { label: "号码5", index: 4 },
+                    { label: "号码6", index: 5 },
+                  ].map((item) => (
+                    <div key={item.index} className="grid grid-cols-3 gap-4 items-center">
+                      <Label className="text-sm">{item.label}</Label>
+                      <div className="col-span-2">
+                        <Input
+                          type="number"
+                          min="1"
+                          max="49"
+                          value={numbers[item.index]}
+                          onChange={(e) => handleNumberChange(item.index, e.target.value)}
+                          placeholder="1-49"
+                        />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* 特码 */}
+              <div className="grid grid-cols-3 gap-4 items-center border-b pb-4">
+                <Label className="font-semibold">特码</Label>
+                <div className="col-span-2">
                   <Input
                     type="number"
                     min="1"
@@ -179,57 +276,55 @@ export default function AdminQuickDraw() {
                     value={numbers[6]}
                     onChange={(e) => handleNumberChange(6, e.target.value)}
                     placeholder="1-49"
-                    className="max-w-xs"
                   />
-                  {attributes[6] && (
-                    <div className="flex items-center gap-2">
-                      <LotteryBall
-                        number={parseInt(numbers[6])}
-                        color={attributes[6].color as any}
-                        className="w-10 h-10"
-                      />
-                      <span className="text-sm text-muted-foreground">
-                        {attributes[6].zodiac}
-                      </span>
-                    </div>
-                  )}
+                </div>
+              </div>
+
+              {/* 下期时间 */}
+              <div className="grid grid-cols-3 gap-4 items-center border-b pb-4">
+                <Label className="font-semibold">下期时间</Label>
+                <div className="col-span-2">
+                  <Input
+                    type="datetime-local"
+                    value={nextDrawTime}
+                    onChange={(e) => setNextDrawTime(e.target.value)}
+                  />
+                </div>
+              </div>
+
+              {/* 下期星期 */}
+              <div className="grid grid-cols-3 gap-4 items-center border-b pb-4">
+                <Label className="font-semibold">下期星期</Label>
+                <div className="col-span-2 bg-gray-100 p-2 rounded">
+                  <span>{nextDrawWeek}</span>
+                </div>
+              </div>
+
+              {/* 年份 */}
+              <div className="grid grid-cols-3 gap-4 items-center">
+                <Label className="font-semibold">年份</Label>
+                <div className="col-span-2 bg-gray-100 p-2 rounded">
+                  <span>{year}</span>
                 </div>
               </div>
             </div>
 
             {/* 提交按钮 */}
-            <div className="flex justify-end gap-4">
+            <div className="flex justify-end gap-4 mt-8">
               <Button
                 variant="outline"
-                onClick={() => {
-                  setIssueNumber("");
-                  setDrawTime("");
-                  setNumbers(Array(7).fill(""));
-                  setAttributes([]);
-                }}
+                onClick={handleReset}
               >
                 重置
               </Button>
               <Button
                 onClick={handleSubmit}
                 disabled={createDrawMutation.isPending}
+                className="bg-blue-600 hover:bg-blue-700"
               >
-                {createDrawMutation.isPending ? "提交中..." : "确定提交"}
+                {createDrawMutation.isPending ? "提交中..." : "确定"}
               </Button>
             </div>
-          </CardContent>
-        </Card>
-
-        {/* 说明 */}
-        <Card className="card-elegant">
-          <CardHeader>
-            <CardTitle>使用说明</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-2 text-sm text-muted-foreground">
-            <p>• 期号和开奖时间需要手动输入</p>
-            <p>• 输入号码后会自动识别波色和生肖属性</p>
-            <p>• 提交后开奖记录会立即生效,前端会自动同步显示</p>
-            <p>• 如需修改,请前往"开奖历史"页面进行编辑</p>
           </CardContent>
         </Card>
       </div>
