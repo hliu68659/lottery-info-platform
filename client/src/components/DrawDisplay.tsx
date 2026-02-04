@@ -3,6 +3,7 @@ import { LotteryBall } from "./LotteryBall";
 import { DrawCountdown } from "./DrawCountdown";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import { Clock, CheckCircle2, Zap } from "lucide-react";
+import { getWaveColorInfo } from "@/lib/waveColorMatcher";
 import type { LotteryDraw } from "../../../drizzle/schema";
 
 interface DrawDisplayProps {
@@ -11,13 +12,17 @@ interface DrawDisplayProps {
   isCustom?: boolean;
 }
 
+interface DisplayNumber {
+  number?: number;
+  color?: "red" | "blue" | "green" | "gray";
+  text?: string;
+  zodiac?: string;
+  waveColor?: string;
+  visible: boolean;
+}
+
 export function DrawDisplay({ lotteryName, draw, isCustom = false }: DrawDisplayProps) {
-  const [displayNumbers, setDisplayNumbers] = useState<Array<{
-    number?: number;
-    color?: "red" | "blue" | "green" | "gray";
-    text?: string;
-    visible: boolean;
-  }>>([]);
+  const [displayNumbers, setDisplayNumbers] = useState<DisplayNumber[]>([]);
   const [isDrawing, setIsDrawing] = useState(false);
   const [timeUntilDraw, setTimeUntilDraw] = useState<number | null>(null);
   const [isSyncingPhase, setIsSyncingPhase] = useState(false);
@@ -81,20 +86,28 @@ export function DrawDisplay({ lotteryName, draw, isCustom = false }: DrawDisplay
       ];
 
       // 初始化所有号码为不可见
-      setDisplayNumbers(numbers.map((num) => ({
-        number: num.number || undefined,
-        color: num.color || "gray",
-        visible: false,
-      })));
+      setDisplayNumbers(numbers.map((num) => {
+        const waveInfo = num.number ? getWaveColorInfo(num.number) : null;
+        return {
+          number: num.number || undefined,
+          color: num.color || "gray",
+          zodiac: waveInfo?.zodiac,
+          waveColor: waveInfo?.waveColor,
+          visible: false,
+        };
+      }));
 
       // 每隔8秒显示一个号码
       numbers.forEach((num, index) => {
         setTimeout(() => {
           setDisplayNumbers(prev => {
+            const waveInfo = num.number ? getWaveColorInfo(num.number) : null;
             const newNumbers = [...prev];
             newNumbers[index] = {
               number: num.number || undefined,
               color: num.color || "gray",
+              zodiac: waveInfo?.zodiac,
+              waveColor: waveInfo?.waveColor,
               visible: true,
             };
             return newNumbers;
@@ -113,11 +126,16 @@ export function DrawDisplay({ lotteryName, draw, isCustom = false }: DrawDisplay
         { number: draw.specialNumber, color: draw.specialNumberColor },
       ];
 
-      setDisplayNumbers(numbers.map(num => ({
-        number: num.number || undefined,
-        color: num.color || "gray",
-        visible: true,
-      })));
+      setDisplayNumbers(numbers.map(num => {
+        const waveInfo = num.number ? getWaveColorInfo(num.number) : null;
+        return {
+          number: num.number || undefined,
+          color: num.color || "gray",
+          zodiac: waveInfo?.zodiac,
+          waveColor: waveInfo?.waveColor,
+          visible: true,
+        };
+      }));
       setIsDrawing(false);
     } else {
       // 其他情况显示问号
@@ -193,6 +211,8 @@ export function DrawDisplay({ lotteryName, draw, isCustom = false }: DrawDisplay
                 number={ball.number}
                 color={ball.color}
                 text={ball.text}
+                zodiac={ball.zodiac}
+                waveColor={ball.waveColor}
                 animate={isDrawing && ball.visible}
               />
             </div>
@@ -205,6 +225,8 @@ export function DrawDisplay({ lotteryName, draw, isCustom = false }: DrawDisplay
                   number={displayNumbers[6].number}
                   color={displayNumbers[6].color}
                   text={displayNumbers[6].text}
+                  zodiac={displayNumbers[6].zodiac}
+                  waveColor={displayNumbers[6].waveColor}
                   animate={isDrawing && displayNumbers[6].visible}
                   className="w-16 h-16 text-xl ring-4 ring-primary/30"
                 />
