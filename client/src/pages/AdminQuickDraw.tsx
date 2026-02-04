@@ -142,9 +142,9 @@ export default function AdminQuickDraw() {
     }
 
     createDrawMutation.mutate({
-      lotteryTypeId,
+      lotteryTypeCode: lotteryTypes?.find(t => t.id === lotteryTypeId)?.code || "",
       issueNumber,
-      drawTime: new Date(drawTime).toISOString(),
+      drawTime: new Date(drawTime),
       numbers: nums,
     });
   };

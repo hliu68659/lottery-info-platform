@@ -39,22 +39,29 @@ export default function Home() {
   const laoao = lotteryTypes?.find(t => t.code === "laoao");
 
   // 使用 staleTime 缓存数据，只在明确需要时才重新获取
-  const { data: xinaoMidnightDraw, refetch: refetchXinaoMidnight } = trpc.lotteryDraws.getLatest.useQuery(
-    { lotteryTypeId: xinaoMidnight?.id || 0 },
-    { enabled: !!xinaoMidnight, staleTime: 60000 } // 缓存60秒
+  const { data: xinaoMidnightDraws, refetch: refetchXinaoMidnight } = trpc.lotteryDraws.list.useQuery(
+    { lotteryTypeCode: "xinao_midnight", limit: 1 },
+    { staleTime: 60000 }
   );
-  const { data: xinaoDraw, refetch: refetchXinao } = trpc.lotteryDraws.getLatest.useQuery(
-    { lotteryTypeId: xinao?.id || 0 },
-    { enabled: !!xinao, staleTime: 60000 }
+  const xinaoMidnightDraw = xinaoMidnightDraws?.[0];
+  
+  const { data: xinaoDraws, refetch: refetchXinao } = trpc.lotteryDraws.list.useQuery(
+    { lotteryTypeCode: "xinao", limit: 1 },
+    { staleTime: 60000 }
   );
-  const { data: hongkongDraw, refetch: refetchHongkong } = trpc.lotteryDraws.getLatest.useQuery(
-    { lotteryTypeId: hongkong?.id || 0 },
-    { enabled: !!hongkong, staleTime: 60000 }
+  const xinaoDraw = xinaoDraws?.[0];
+  
+  const { data: hongkongDraws, refetch: refetchHongkong } = trpc.lotteryDraws.list.useQuery(
+    { lotteryTypeCode: "hongkong", limit: 1 },
+    { staleTime: 60000 }
   );
-  const { data: laoaoDraw, refetch: refetchLaoao } = trpc.lotteryDraws.getLatest.useQuery(
-    { lotteryTypeId: laoao?.id || 0 },
-    { enabled: !!laoao, staleTime: 60000 }
+  const hongkongDraw = hongkongDraws?.[0];
+  
+  const { data: laoaoDraws, refetch: refetchLaoao } = trpc.lotteryDraws.list.useQuery(
+    { lotteryTypeCode: "laoao", limit: 1 },
+    { staleTime: 60000 }
   );
+  const laoaoDraw = laoaoDraws?.[0];
 
   const functionIcons = [
     { icon: Sparkles, label: "号码属性", path: "/zodiac", color: "text-yellow-600" },

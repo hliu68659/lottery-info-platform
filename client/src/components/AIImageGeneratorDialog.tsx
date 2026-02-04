@@ -37,7 +37,7 @@ export function AIImageGeneratorDialog({
 
   const generateByTypeMutation = trpc.aiImage.generateByType.useMutation({
     onSuccess: (data) => {
-      setGeneratedImage(data.url);
+      setGeneratedImage(data.imageUrl.url);
       toast.success("配图生成成功！");
     },
     onError: (error) => {
@@ -53,7 +53,7 @@ export function AIImageGeneratorDialog({
 
   const generateFromTextMutation = trpc.aiImage.generateFromText.useMutation({
     onSuccess: (data) => {
-      setGeneratedImage(data.url);
+      setGeneratedImage(data.imageUrl.url);
       toast.success("配图生成成功！");
     },
     onError: (error) => {

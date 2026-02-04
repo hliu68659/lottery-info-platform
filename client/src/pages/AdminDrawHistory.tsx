@@ -34,9 +34,10 @@ export default function AdminDrawHistory() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
   const { data: lotteryTypes } = trpc.lotteryTypes.list.useQuery({ enabledOnly: true });
+  const selectedLotteryCode = lotteryTypes?.find(t => t.id === selectedLotteryId)?.code;
   const { data: draws, refetch } = trpc.lotteryDraws.list.useQuery(
-    { lotteryTypeId: selectedLotteryId || undefined, limit: 100 },
-    { enabled: !!selectedLotteryId }
+    { lotteryTypeCode: selectedLotteryCode, limit: 100 },
+    { enabled: !!selectedLotteryCode }
   );
 
   const updateDrawMutation = trpc.lotteryDraws.update.useMutation({

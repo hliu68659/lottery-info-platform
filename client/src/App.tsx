@@ -10,6 +10,7 @@ import ZodiacPage from "./pages/ZodiacPage";
 import HistoryPage from "./pages/HistoryPage";
 import PlaceholderPage from "./pages/PlaceholderPage";
 import Admin from "./pages/Admin";
+import AdminLogin from "./pages/AdminLogin";
 import AdminQuickDraw from "./pages/AdminQuickDraw";
 import AdminDrawHistory from "./pages/AdminDrawHistory";
 import AdminMaterials from "./pages/AdminMaterials";
@@ -52,6 +53,9 @@ function Router() {
           description="幽默猜测功能正在开发中，敬请期待！" 
         />
       </Route>
+      
+      {/* 后台登入 */}
+      <Route path={"/admin/login"} component={AdminLogin} />
       
       {/* 后台管理路由 - 需要管理员权限 */}
       <Route path={"/admin"}>

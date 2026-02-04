@@ -14,9 +14,10 @@ import {
   numberAttributes,
   zodiacCards 
 } from "../drizzle/schema";
-import { eq } from "drizzle-orm";
+import { eq, desc } from "drizzle-orm";
 import { generateImageFromText, generateImageByType } from "./imageGeneration";
 import { storagePut } from "../server/storage";
+import jwt from "jsonwebtoken";
 
 // 管理员权限检查中间件
 const adminProcedure = protectedProcedure.use(({ ctx, next }) => {
@@ -26,8 +27,38 @@ const adminProcedure = protectedProcedure.use(({ ctx, next }) => {
   return next({ ctx });
 });
 
+// 后台登入凭证
+const ADMIN_USERNAME = "kaijiang";
+const ADMIN_PASSWORD = "kaijiang1866333";
+
 export const appRouter = router({
   system: systemRouter,
+  
+  // ============ 后台登入 ============
+  admin: router({
+    login: publicProcedure
+      .input(z.object({
+        username: z.string(),
+        password: z.string(),
+      }))
+      .mutation(async ({ input }) => {
+        if (input.username !== ADMIN_USERNAME || input.password !== ADMIN_PASSWORD) {
+          throw new TRPCError({ 
+            code: 'UNAUTHORIZED', 
+            message: '账号或密码错误' 
+          });
+        }
+
+        // 生成JWT token
+        const token = jwt.sign(
+          { username: ADMIN_USERNAME, type: 'admin' },
+          process.env.JWT_SECRET || 'default-secret',
+          { expiresIn: '7d' }
+        );
+
+        return { success: true, token };
+      }),
+  }),
   
   // ============ 文件上传 ============
   upload: router({
@@ -236,17 +267,22 @@ export const appRouter = router({
   lotteryDraws: router({
     list: publicProcedure
       .input(z.object({
-        lotteryTypeId: z.number().optional(),
-        limit: z.number().optional(),
+        lotteryTypeCode: z.string().optional(),
+        limit: z.number().default(20),
       }))
       .query(async ({ input }) => {
-        return await db.getLotteryDraws(input.lotteryTypeId, input.limit);
-      }),
-    
-    getLatest: publicProcedure
-      .input(z.object({ lotteryTypeId: z.number() }))
-      .query(async ({ input }) => {
-        return await db.getLatestDraw(input.lotteryTypeId);
+        const database = await getDb();
+        if (!database) return [];
+        
+        let query = database.select().from(lotteryDraws);
+        
+        if (input.lotteryTypeCode) {
+          const lotteryType = await database.select().from(lotteryTypes).where(eq(lotteryTypes.code, input.lotteryTypeCode));
+          if (lotteryType.length > 0) {
+            query = query.where(eq(lotteryDraws.lotteryTypeId, lotteryType[0].id)) as any;
+          }
+        }
+        return await query.orderBy(desc(lotteryDraws.drawTime)).limit(input.limit);
       }),
     
     getById: publicProcedure
@@ -254,51 +290,41 @@ export const appRouter = router({
       .query(async ({ input }) => {
         return await db.getLotteryDrawById(input.id);
       }),
-    
-    // 快捷开奖 - 支持手动输入期号和开奖时间
+
+    // 快捷开奖
     quickCreate: adminProcedure
       .input(z.object({
-        lotteryTypeId: z.number(),
+        lotteryTypeCode: z.string(),
         issueNumber: z.string(),
-        drawTime: z.string(),
+        drawTime: z.date(),
         numbers: z.array(z.number().min(1).max(49)).length(7),
       }))
       .mutation(async ({ input }) => {
         const database = await getDb();
         if (!database) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: '数据库不可用' });
         
-        // 获取彩票类型信息
-        const lotteryType = await db.getLotteryTypeById(input.lotteryTypeId);
-        if (!lotteryType) {
-          throw new TRPCError({ code: 'NOT_FOUND', message: '彩票类型不存在' });
-        }
+        // 计算下期时间
+        const nextDrawTime = new Date(input.drawTime);
+        nextDrawTime.setDate(nextDrawTime.getDate() + 1);
         
-        // 使用手动输入的期号和开奖时间
-        const issueNumber = input.issueNumber.trim();
-        const drawTime = new Date(input.drawTime);
-        const year = drawTime.getFullYear();
+        // 计算下期期号
+        const currentIssue = parseInt(input.issueNumber);
+        const nextIssue = String(currentIssue + 1).padStart(3, '0');
         
-        // 计算下期开奖时间和期号
-        const nextDrawTime = new Date(drawTime.getTime() + lotteryType.intervalHours * 60 * 60 * 1000);
-        const nextIssueNumber = String(parseInt(issueNumber) + 1).padStart(3, '0');
-        
-        // 自动识别号码属性
+        // 获取号码属性
         const attributes = await Promise.all(
           input.numbers.map(num => db.getNumberAttribute(num))
         );
         
-        // 构建开奖记录
         const drawData: any = {
-          lotteryTypeId: input.lotteryTypeId,
-          issueNumber,
-          year,
-          drawTime,
-          status: 'pending',
-          nextDrawTime,
-          nextIssueNumber,
+          lotteryTypeCode: input.lotteryTypeCode,
+          issueNumber: input.issueNumber,
+          drawTime: input.drawTime,
+          nextDrawTime: nextDrawTime,
+          nextIssueNumber: nextIssue,
+          status: 'completed',
         };
         
-        // 填充7个号码及其属性
         input.numbers.forEach((num, index) => {
           const attr = attributes[index];
           if (index < 6) {
@@ -313,7 +339,7 @@ export const appRouter = router({
         });
         
         const result = await database.insert(lotteryDraws).values(drawData);
-        return { id: Number(result[0].insertId), success: true, issueNumber, drawTime, nextDrawTime };
+        return { id: Number(result[0].insertId), success: true, issueNumber: input.issueNumber, drawTime: input.drawTime, nextDrawTime };
       }),
     
     // 更新开奖记录
@@ -387,81 +413,35 @@ export const appRouter = router({
       }))
       .mutation(async ({ input }) => {
         try {
-          const result = await generateImageFromText(input.text, input.style);
-          return result;
+          const imageUrl = await generateImageFromText(input.text, input.style);
+          return { imageUrl };
         } catch (error) {
-          throw new TRPCError({
-            code: 'INTERNAL_SERVER_ERROR',
-            message: `配图生成失败: ${error instanceof Error ? error.message : '\u672a\u77e5\u9519\u8bef'}`,
-          });
+          console.error('Image generation failed:', error);
+          throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Image generation failed' });
         }
       }),
-
+    
     generateByType: adminProcedure
       .input(z.object({
-        title: z.string().min(1),
-        content: z.string().min(1),
-        type: z.enum(["text", "formula", "wisdom"]).optional(),
+        type: z.enum(["fortune", "zodiac", "number", "custom"]),
+        data: z.record(z.string(), z.any()).optional(),
       }))
       .mutation(async ({ input }) => {
         try {
-          const result = await generateImageByType(
-            input.title,
-            input.content,
-            input.type as any
-          );
-          return result;
+          const imageUrl = await generateImageByType(input.type, "");
+          return { imageUrl };
         } catch (error) {
-          throw new TRPCError({
-            code: 'INTERNAL_SERVER_ERROR',
-            message: `配图生成失败: ${error instanceof Error ? error.message : '\u672a\u77e5\u9519\u8bef'}`,
-          });
+          console.error('Image generation failed:', error);
+          throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Image generation failed' });
         }
       }),
   }),
 
-  // ============ 生肖卡 ============
-  zodiacCards: router({
-    getActive: publicProcedure.query(async () => {
-      return await db.getActiveZodiacCard();
-    }),
-    
-    getAll: adminProcedure.query(async () => {
+  // ============ 生肖卡片 ============
+  zodiacCard: router({
+    list: publicProcedure.query(async () => {
       return await db.getAllZodiacCards();
     }),
-    
-    create: adminProcedure
-      .input(z.object({
-        imageUrl: z.string(),
-        year: z.number(),
-        active: z.boolean().default(true),
-      }))
-      .mutation(async ({ input }) => {
-        const database = await getDb();
-        if (!database) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: '数据库不可用' });
-        
-        // 如果设置为活跃,先将其他卡片设为非活跃
-        if (input.active) {
-          await database.update(zodiacCards).set({ active: false });
-        }
-        
-        const result = await database.insert(zodiacCards).values(input);
-        return { id: Number(result[0].insertId), success: true };
-      }),
-    
-    setActive: adminProcedure
-      .input(z.object({ id: z.number() }))
-      .mutation(async ({ input }) => {
-        const database = await getDb();
-        if (!database) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: '数据库不可用' });
-        
-        // 先将所有卡片设为非活跃
-        await database.update(zodiacCards).set({ active: false });
-        // 再将指定卡片设为活跃
-        await database.update(zodiacCards).set({ active: true }).where(eq(zodiacCards.id, input.id));
-        
-        return { success: true };
-      }),
   }),
 });
 

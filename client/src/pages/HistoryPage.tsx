@@ -12,12 +12,11 @@ export default function HistoryPage() {
   const [selectedLotteryId, setSelectedLotteryId] = useState<number | null>(null);
 
   const { data: lotteryTypes } = trpc.lotteryTypes.list.useQuery({ enabledOnly: true });
-  const { data: draws, isLoading } = trpc.lotteryDraws.list.useQuery(
-    { lotteryTypeId: selectedLotteryId || undefined, limit: 50 },
-    { enabled: !!selectedLotteryId }
-  );
-
   const selectedLottery = lotteryTypes?.find(t => t.id === selectedLotteryId);
+  const { data: draws, isLoading } = trpc.lotteryDraws.list.useQuery(
+    { lotteryTypeCode: selectedLottery?.code, limit: 50 },
+    { enabled: !!selectedLottery?.code }
+  );
 
   return (
     <div className="min-h-screen elegant-gradient">

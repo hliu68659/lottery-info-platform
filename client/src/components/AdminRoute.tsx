@@ -1,4 +1,5 @@
-import { useAuth } from "@/_core/hooks/useAuth";
+import { useEffect, useState } from "react";
+import { useLocation } from "wouter";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ShieldAlert, Home } from "lucide-react";
@@ -11,13 +12,31 @@ interface AdminRouteProps {
 
 /**
  * 管理员路由保护组件
- * 确保只有管理员用户才能访问后台页面
+ * 检查localStorage中的adminToken，如果没有则重定向到登入页面
  */
 export default function AdminRoute({ children }: AdminRouteProps) {
-  const { user, loading } = useAuth();
+  const [, navigate] = useLocation();
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    // 检查localStorage中是否存在adminToken
+    const adminToken = localStorage.getItem("adminToken");
+    
+    if (!adminToken) {
+      // 没有token，重定向到登入页面
+      navigate("/admin/login");
+      setIsLoading(false);
+      return;
+    }
+
+    // 有token，标记为已认证
+    setIsAuthenticated(true);
+    setIsLoading(false);
+  }, [navigate]);
 
   // 加载中状态
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100">
         <Card className="w-96">
@@ -30,8 +49,8 @@ export default function AdminRoute({ children }: AdminRouteProps) {
     );
   }
 
-  // 未登录或非管理员
-  if (!user || user.role !== 'admin') {
+  // 未认证
+  if (!isAuthenticated) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100">
         <Card className="w-[480px] shadow-lg">
@@ -45,19 +64,9 @@ export default function AdminRoute({ children }: AdminRouteProps) {
                 访问受限
               </h2>
               
-              <p className="text-muted-foreground mb-2">
-                {!user 
-                  ? "您需要登录才能访问后台管理系统" 
-                  : "您没有权限访问后台管理系统"}
+              <p className="text-muted-foreground mb-6">
+                您需要登入才能访问后台管理系统
               </p>
-              
-              {user && (
-                <p className="text-sm text-muted-foreground mb-6">
-                  当前账号：<span className="font-medium">{user.name || user.email}</span>
-                  <br />
-                  权限级别：<span className="font-medium">{user.role === 'user' ? '普通用户' : user.role}</span>
-                </p>
-              )}
               
               <div className="flex gap-3 mt-4">
                 <Link href="/">
@@ -67,17 +76,12 @@ export default function AdminRoute({ children }: AdminRouteProps) {
                   </Button>
                 </Link>
                 
-                {!user && (
-                  <Button 
-                    onClick={() => {
-                      // 触发登录流程
-                      window.location.href = "/api/auth/login";
-                    }}
-                    className="gap-2"
-                  >
-                    立即登录
-                  </Button>
-                )}
+                <Button 
+                  onClick={() => navigate("/admin/login")}
+                  className="gap-2"
+                >
+                  前往登入
+                </Button>
               </div>
             </div>
           </CardContent>
@@ -86,6 +90,6 @@ export default function AdminRoute({ children }: AdminRouteProps) {
     );
   }
 
-  // 管理员用户，渲染子组件
+  // 已认证，渲染子组件
   return <>{children}</>;
 }

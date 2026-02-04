@@ -7,7 +7,7 @@ import { ArrowLeft, ZoomIn } from "lucide-react";
 
 export default function ZodiacPage() {
   const [, navigate] = useLocation();
-  const { data: zodiacCard, isLoading } = trpc.zodiacCards.getActive.useQuery();
+  const { data: zodiacCards, isLoading } = trpc.zodiacCard.list.useQuery();
 
   return (
     <div className="min-h-screen elegant-gradient">
@@ -30,62 +30,70 @@ export default function ZodiacPage() {
       </header>
 
       <main className="container py-8">
-        <Card className="card-elegant">
-          <CardContent className="p-8">
-            {isLoading ? (
-              <div className="text-center text-muted-foreground py-12">加载中...</div>
-            ) : zodiacCard ? (
-              <div className="space-y-6">
-                <h2 className="text-2xl font-bold text-center mb-6">
-                  {zodiacCard.year}年生肖对照表
-                </h2>
-                
-                <div className="relative">
-                  <img 
-                    src={zodiacCard.imageUrl} 
-                    alt={`${zodiacCard.year}年生肖卡`}
-                    className="w-full h-auto rounded-lg shadow-lg"
-                  />
-                  
-                  {/* 放大查看按钮 */}
-                  <Dialog>
-                    <DialogTrigger asChild>
-                      <Button 
-                        className="absolute bottom-4 right-4"
-                        size="lg"
-                      >
-                        <ZoomIn className="w-5 h-5 mr-2" />
-                        放大查看
-                      </Button>
-                    </DialogTrigger>
-                    <DialogContent className="max-w-7xl w-full h-[90vh] p-0">
-                      <div className="w-full h-full overflow-auto p-4">
-                        <img 
-                          src={zodiacCard.imageUrl} 
-                          alt={`${zodiacCard.year}年生肖卡`}
-                          className="w-full h-auto"
-                        />
-                      </div>
-                    </DialogContent>
-                  </Dialog>
-                </div>
+        {isLoading ? (
+          <div className="text-center text-muted-foreground py-12">加载中...</div>
+        ) : zodiacCards && zodiacCards.length > 0 ? (
+          <div className="space-y-8">
+            {zodiacCards.map((zodiacCard) => (
+              <Card key={zodiacCard.id} className="card-elegant">
+                <CardContent className="p-8">
+                  <div className="space-y-6">
+                    <h2 className="text-2xl font-bold text-center mb-6">
+                      {zodiacCard.year}年生肖对照表
+                    </h2>
+                    
+                    <div className="relative">
+                      <img 
+                        src={zodiacCard.imageUrl} 
+                        alt={`${zodiacCard.year}年生肖卡`}
+                        className="w-full h-auto rounded-lg shadow-lg"
+                      />
+                      
+                      {/* 放大查看按钮 */}
+                      <Dialog>
+                        <DialogTrigger asChild>
+                          <Button 
+                            className="absolute bottom-4 right-4"
+                            size="lg"
+                          >
+                            <ZoomIn className="w-5 h-5 mr-2" />
+                            放大查看
+                          </Button>
+                        </DialogTrigger>
+                        <DialogContent className="max-w-7xl w-full h-[90vh] p-0">
+                          <div className="w-full h-full overflow-auto p-4">
+                            <img 
+                              src={zodiacCard.imageUrl} 
+                              alt={`${zodiacCard.year}年生肖卡`}
+                              className="w-full h-auto"
+                            />
+                          </div>
+                        </DialogContent>
+                      </Dialog>
+                    </div>
 
-                <div className="bg-muted/50 rounded-lg p-6 space-y-3">
-                  <h3 className="font-semibold text-lg">使用说明</h3>
-                  <ul className="space-y-2 text-sm text-muted-foreground">
-                    <li>• 生肖卡展示了每个号码对应的生肖属性</li>
-                    <li>• 点击"放大查看"按钮可以查看高清大图</li>
-                    <li>• 每个号码都有对应的波色(红/蓝/绿)和生肖属性</li>
-                  </ul>
-                </div>
-              </div>
-            ) : (
+                    <div className="bg-muted/50 rounded-lg p-6 space-y-3">
+                      <h3 className="font-semibold text-lg">使用说明</h3>
+                      <ul className="space-y-2 text-sm text-muted-foreground">
+                        <li>• 生肖卡展示了每个号码对应的生肖属性</li>
+                        <li>• 点击"放大查看"按钮可以查看高清大图</li>
+                        <li>• 每个号码都有对应的波色(红/蓝/绿)和生肖属性</li>
+                      </ul>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        ) : (
+          <Card className="card-elegant">
+            <CardContent className="p-8">
               <div className="text-center text-muted-foreground py-12">
                 暂无生肖卡数据
               </div>
-            )}
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        )}
       </main>
 
       {/* 页脚 */}
