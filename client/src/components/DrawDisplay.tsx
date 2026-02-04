@@ -177,8 +177,8 @@ export function DrawDisplay({ lotteryName, draw, isCustom = false }: DrawDisplay
               开奖时间: {new Date(draw.drawTime).toLocaleString('zh-CN')}
             </div>
             
-            {/* 倒计时显示 */}
-            {draw.status === "pending" && timeUntilDraw !== null && (
+            {/* 倒计时显示 - 开奖完成后也一直显示 */}
+            {timeUntilDraw !== null && (
               <div className="flex items-center justify-center gap-2 text-sm font-medium text-primary mt-3">
                 <Clock className="w-4 h-4" />
                 <span>{formatTimeLeft(timeUntilDraw)}后开奖</span>
@@ -194,7 +194,7 @@ export function DrawDisplay({ lotteryName, draw, isCustom = false }: DrawDisplay
             )}
             
             {/* 已完成提示 */}
-            {draw.status === "completed" && (
+            {draw.status === "completed" && timeUntilDraw === null && (
               <div className="flex items-center justify-center gap-2 text-sm text-green-600 font-medium">
                 <CheckCircle2 className="w-4 h-4" />
                 <span>开奖已完成</span>
