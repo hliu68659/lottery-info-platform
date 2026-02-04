@@ -65,6 +65,31 @@ export default function AdminQuickDraw() {
 
   const utils = trpc.useUtils();
 
+  const handleDrawTimeChange = (value: string) => {
+    setDrawTime(value);
+    
+    // 自动设置下期时间为下一天的同一时间
+    if (value) {
+      const drawDate = new Date(value);
+      const nextDrawDate = new Date(drawDate);
+      nextDrawDate.setDate(nextDrawDate.getDate() + 1);
+      
+      // 格式化为 datetime-local 格式
+      const year = nextDrawDate.getFullYear();
+      const month = String(nextDrawDate.getMonth() + 1).padStart(2, '0');
+      const day = String(nextDrawDate.getDate()).padStart(2, '0');
+      const hours = String(nextDrawDate.getHours()).padStart(2, '0');
+      const minutes = String(nextDrawDate.getMinutes()).padStart(2, '0');
+      
+      const formattedNextDrawTime = `${year}-${month}-${day}T${hours}:${minutes}`;
+      setNextDrawTime(formattedNextDrawTime);
+      
+      // 计算下期星期
+      const weekDays = ['星期日', '星期一', '星期二', '星期三', '星期四', '星期五', '星期六'];
+      setNextDrawWeek(weekDays[nextDrawDate.getDay()]);
+    }
+  };
+
   const handleNumberChange = async (index: number, value: string) => {
     const newNumbers = [...numbers];
     newNumbers[index] = value;
@@ -194,7 +219,7 @@ export default function AdminQuickDraw() {
                   <Input
                     type="datetime-local"
                     value={drawTime}
-                    onChange={(e) => setDrawTime(e.target.value)}
+                    onChange={(e) => handleDrawTimeChange(e.target.value)}
                   />
                 </div>
               </div>
@@ -339,8 +364,10 @@ export default function AdminQuickDraw() {
                   <Input
                     type="datetime-local"
                     value={nextDrawTime}
-                    onChange={(e) => setNextDrawTime(e.target.value)}
+                    disabled
+                    className="bg-gray-50 cursor-not-allowed"
                   />
+                  <p className="text-xs text-muted-foreground mt-1">自动关联开奖时间（下一天）</p>
                 </div>
               </div>
 
