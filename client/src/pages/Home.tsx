@@ -163,11 +163,11 @@ export default function Home() {
           </div>
         </section>
 
-        {/* 文字资料区域 */}
+        {/* 文字资料区域 - 单列显示 */}
         {textBlocks && textBlocks.length > 0 && (
           <section>
             <h2 className="text-2xl font-bold mb-6 text-center">资讯动态</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4">
               {textBlocks.map((block) => (
                 <Card key={block.id} className="card-elegant hover:shadow-lg transition-shadow">
                   <CardHeader>
@@ -185,11 +185,11 @@ export default function Home() {
           </section>
         )}
 
-        {/* 图片资料区域 */}
+        {/* 图片资料区域 - 单列显示 */}
         {imageBlocks && imageBlocks.length > 0 && (
           <section>
             <h2 className="text-2xl font-bold mb-6 text-center">精选图片</h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 gap-4">
               {imageBlocks.map((block) => (
                 <Card key={block.id} className="card-elegant overflow-hidden hover:shadow-lg transition-shadow">
                   <img 
