@@ -1,14 +1,7 @@
 /**
- * 波色匹配工具
- * 根据号码返回对应的波色、生肖和颜色
+ * 彩票号码属性映射表
+ * 包含生肖和波色属性
  */
-
-export interface WaveColorInfo {
-  waveColor: "红" | "蓝" | "绿"; // 波色名称
-  colorCode: "red" | "blue" | "green"; // 颜色代码
-  zodiac: string; // 生肖
-  element: string; // 五行属性
-}
 
 // 生肖映射表
 const zodiacMap: Record<number, string> = {
@@ -62,70 +55,47 @@ const waveColorMap: Record<number, "红" | "蓝" | "绿"> = {
   5: "绿", 6: "绿", 11: "绿", 16: "绿", 17: "绿", 21: "绿", 22: "绿", 27: "绿", 28: "绿", 32: "绿", 33: "绿", 38: "绿", 39: "绿", 43: "绿", 44: "绿", 49: "绿",
 };
 
-// 号码到波色信息的映射
-const WAVE_COLOR_MAP: Record<number, WaveColorInfo> = {};
+/**
+ * 获取号码的生肖
+ */
+export function getZodiac(number: number): string {
+  return zodiacMap[number] || "未知";
+}
 
-// 初始化映射表
-for (let i = 1; i <= 49; i++) {
-  const waveColor = waveColorMap[i] || "红";
-  const colorCode = waveColor === "红" ? "red" : waveColor === "蓝" ? "blue" : "green";
-  const zodiac = zodiacMap[i] || "未知";
-  const element = elementMap[i] || "未知";
-  
-  WAVE_COLOR_MAP[i] = {
-    waveColor,
-    colorCode,
-    zodiac,
-    element,
+/**
+ * 获取号码的五行属性
+ */
+export function getElement(number: number): string {
+  return elementMap[number] || "未知";
+}
+
+/**
+ * 获取号码的波色
+ */
+export function getWaveColor(number: number): "红" | "蓝" | "绿" {
+  return waveColorMap[number] || "红";
+}
+
+/**
+ * 获取号码的所有属性
+ */
+export function getNumberAttributes(number: number) {
+  return {
+    number,
+    zodiac: getZodiac(number),
+    element: getElement(number),
+    waveColor: getWaveColor(number),
   };
 }
 
 /**
- * 根据号码获取波色信息
+ * 根据波色获取对应的颜色类名
  */
-export function getWaveColorInfo(number: number): WaveColorInfo | null {
-  return WAVE_COLOR_MAP[number] || null;
-}
-
-/**
- * 获取所有波色信息
- */
-export function getAllWaveColors(): Record<number, WaveColorInfo> {
-  return WAVE_COLOR_MAP;
-}
-
-/**
- * 根据波色获取所有号码
- */
-export function getNumbersByWaveColor(waveColor: string): number[] {
-  return Object.entries(WAVE_COLOR_MAP)
-    .filter(([_, info]) => info.waveColor === waveColor)
-    .map(([num, _]) => parseInt(num));
-}
-
-/**
- * 根据颜色代码获取所有号码
- */
-export function getNumbersByColorCode(colorCode: "red" | "blue" | "green"): number[] {
-  return Object.entries(WAVE_COLOR_MAP)
-    .filter(([_, info]) => info.colorCode === colorCode)
-    .map(([num, _]) => parseInt(num));
-}
-
-/**
- * 根据生肖获取所有号码
- */
-export function getNumbersByZodiac(zodiac: string): number[] {
-  return Object.entries(WAVE_COLOR_MAP)
-    .filter(([_, info]) => info.zodiac === zodiac)
-    .map(([num, _]) => parseInt(num));
-}
-
-/**
- * 根据五行获取所有号码
- */
-export function getNumbersByElement(element: string): number[] {
-  return Object.entries(WAVE_COLOR_MAP)
-    .filter(([_, info]) => info.element === element)
-    .map(([num, _]) => parseInt(num));
+export function getWaveColorClass(waveColor: "红" | "蓝" | "绿"): "red" | "blue" | "green" {
+  const colorMap = {
+    "红": "red" as const,
+    "蓝": "blue" as const,
+    "绿": "green" as const,
+  };
+  return colorMap[waveColor] || "red";
 }

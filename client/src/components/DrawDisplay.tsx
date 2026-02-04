@@ -90,7 +90,7 @@ export function DrawDisplay({ lotteryName, draw, isCustom = false }: DrawDisplay
         const waveInfo = num.number ? getWaveColorInfo(num.number) : null;
         return {
           number: num.number || undefined,
-          color: num.color || "gray",
+          color: (waveInfo?.colorCode || num.color || "gray") as "red" | "blue" | "green" | "gray",
           zodiac: waveInfo?.zodiac,
           waveColor: waveInfo?.waveColor,
           visible: false,
@@ -105,7 +105,7 @@ export function DrawDisplay({ lotteryName, draw, isCustom = false }: DrawDisplay
             const newNumbers = [...prev];
             newNumbers[index] = {
               number: num.number || undefined,
-              color: num.color || "gray",
+              color: (waveInfo?.colorCode || num.color || "gray") as "red" | "blue" | "green" | "gray",
               zodiac: waveInfo?.zodiac,
               waveColor: waveInfo?.waveColor,
               visible: true,
@@ -130,7 +130,7 @@ export function DrawDisplay({ lotteryName, draw, isCustom = false }: DrawDisplay
         const waveInfo = num.number ? getWaveColorInfo(num.number) : null;
         return {
           number: num.number || undefined,
-          color: num.color || "gray",
+          color: (waveInfo?.colorCode || num.color || "gray") as "red" | "blue" | "green" | "gray",
           zodiac: waveInfo?.zodiac,
           waveColor: waveInfo?.waveColor,
           visible: true,
