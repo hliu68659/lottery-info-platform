@@ -255,12 +255,13 @@ export const appRouter = router({
         return await db.getLotteryDrawById(input.id);
       }),
     
-    // 快捷开奖 - 自动计算期号和时间
+    // 快捷开奖 - 支持手动输入期号和开奖时间
     quickCreate: adminProcedure
       .input(z.object({
         lotteryTypeId: z.number(),
+        issueNumber: z.string(),
+        drawTime: z.string(),
         numbers: z.array(z.number().min(1).max(49)).length(7),
-        drawTime: z.date().optional(),
       }))
       .mutation(async ({ input }) => {
         const database = await getDb();
@@ -272,25 +273,10 @@ export const appRouter = router({
           throw new TRPCError({ code: 'NOT_FOUND', message: '彩票类型不存在' });
         }
         
-        // 获取上一期记录
-        const latestDraw = await db.getLatestDraw(input.lotteryTypeId);
-        
-        // 自动计算期号
-        let issueNumber: string;
-        let year = new Date().getFullYear();
-        
-        if (latestDraw) {
-          const latestIssueNum = parseInt(latestDraw.issueNumber);
-          issueNumber = String(latestIssueNum + 1).padStart(3, '0');
-          year = latestDraw.year;
-        } else {
-          issueNumber = '001';
-        }
-        
-        // 自动计算开奖时间(如果没有提供)
-        const drawTime = input.drawTime || (latestDraw 
-          ? new Date(latestDraw.drawTime.getTime() + lotteryType.intervalHours * 60 * 60 * 1000)
-          : new Date());
+        // 使用手动输入的期号和开奖时间
+        const issueNumber = input.issueNumber.trim();
+        const drawTime = new Date(input.drawTime);
+        const year = drawTime.getFullYear();
         
         // 计算下期开奖时间和期号
         const nextDrawTime = new Date(drawTime.getTime() + lotteryType.intervalHours * 60 * 60 * 1000);

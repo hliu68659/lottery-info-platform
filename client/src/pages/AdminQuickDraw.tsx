@@ -13,18 +13,18 @@ import { LotteryBall } from "@/components/LotteryBall";
 export default function AdminQuickDraw() {
   const { user } = useAuth();
   const [lotteryTypeId, setLotteryTypeId] = useState<number | null>(null);
+  const [issueNumber, setIssueNumber] = useState<string>("");
+  const [drawTime, setDrawTime] = useState<string>("");
   const [numbers, setNumbers] = useState<string[]>(Array(7).fill(""));
   const [attributes, setAttributes] = useState<Array<{ zodiac?: string; color?: string }>>([]);
 
   const { data: lotteryTypes } = trpc.lotteryTypes.list.useQuery({ enabledOnly: true });
-  const { data: latestDraw } = trpc.lotteryDraws.getLatest.useQuery(
-    { lotteryTypeId: lotteryTypeId || 0 },
-    { enabled: !!lotteryTypeId }
-  );
 
   const createDrawMutation = trpc.lotteryDraws.quickCreate.useMutation({
     onSuccess: (data) => {
       toast.success(`开奖录入成功！期号: ${data.issueNumber}`);
+      setIssueNumber("");
+      setDrawTime("");
       setNumbers(Array(7).fill(""));
       setAttributes([]);
     },
@@ -60,6 +60,16 @@ export default function AdminQuickDraw() {
       return;
     }
 
+    if (!issueNumber.trim()) {
+      toast.error("请输入期号");
+      return;
+    }
+
+    if (!drawTime.trim()) {
+      toast.error("请输入开奖时间");
+      return;
+    }
+
     const nums = numbers.map(n => parseInt(n)).filter(n => !isNaN(n) && n >= 1 && n <= 49);
     if (nums.length !== 7) {
       toast.error("请输入7个有效号码(1-49)");
@@ -68,19 +78,11 @@ export default function AdminQuickDraw() {
 
     createDrawMutation.mutate({
       lotteryTypeId,
+      issueNumber,
+      drawTime: new Date(drawTime).toISOString(),
       numbers: nums,
     });
   };
-
-  // 权限检查已由 AdminRoute 组件处理
-
-  const selectedLottery = lotteryTypes?.find(t => t.id === lotteryTypeId);
-  const nextIssueNumber = latestDraw 
-    ? String(parseInt(latestDraw.issueNumber) + 1).padStart(3, '0')
-    : '001';
-  const nextDrawTime = latestDraw && selectedLottery
-    ? new Date(new Date(latestDraw.drawTime).getTime() + selectedLottery.intervalHours * 60 * 60 * 1000)
-    : new Date();
 
   return (
     <DashboardLayout>
@@ -115,21 +117,26 @@ export default function AdminQuickDraw() {
               </Select>
             </div>
 
-            {/* 自动信息显示 */}
-            {lotteryTypeId && (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-muted/50 rounded-lg">
-                <div>
-                  <Label className="text-sm text-muted-foreground">期号(自动)</Label>
-                  <div className="text-lg font-semibold">{nextIssueNumber}</div>
-                </div>
-                <div>
-                  <Label className="text-sm text-muted-foreground">开奖时间(自动)</Label>
-                  <div className="text-lg font-semibold">
-                    {nextDrawTime.toLocaleString('zh-CN')}
-                  </div>
-                </div>
+            {/* 期号和开奖时间手动输入 */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>期号</Label>
+                <Input
+                  type="text"
+                  value={issueNumber}
+                  onChange={(e) => setIssueNumber(e.target.value)}
+                  placeholder="例如: 001"
+                />
               </div>
-            )}
+              <div className="space-y-2">
+                <Label>开奖时间</Label>
+                <Input
+                  type="datetime-local"
+                  value={drawTime}
+                  onChange={(e) => setDrawTime(e.target.value)}
+                />
+              </div>
+            </div>
 
             {/* 号码输入 */}
             <div className="space-y-4">
@@ -195,6 +202,8 @@ export default function AdminQuickDraw() {
               <Button
                 variant="outline"
                 onClick={() => {
+                  setIssueNumber("");
+                  setDrawTime("");
                   setNumbers(Array(7).fill(""));
                   setAttributes([]);
                 }}
@@ -217,7 +226,7 @@ export default function AdminQuickDraw() {
             <CardTitle>使用说明</CardTitle>
           </CardHeader>
           <CardContent className="space-y-2 text-sm text-muted-foreground">
-            <p>• 期号和开奖时间会根据上一期自动计算</p>
+            <p>• 期号和开奖时间需要手动输入</p>
             <p>• 输入号码后会自动识别波色和生肖属性</p>
             <p>• 提交后开奖记录会立即生效,前端会自动同步显示</p>
             <p>• 如需修改,请前往"开奖历史"页面进行编辑</p>
