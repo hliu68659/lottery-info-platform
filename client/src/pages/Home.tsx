@@ -140,14 +140,12 @@ export default function Home() {
               const Icon = item.icon;
               return (
                 <Link key={index} href={item.path}>
-                  <a className="block">
-                    <Card className="card-elegant hover:shadow-lg transition-shadow cursor-pointer h-full">
-                      <CardContent className="flex flex-col items-center justify-center py-6">
-                        <Icon className={`w-10 h-10 mb-3 ${item.color}`} />
-                        <span className="text-sm font-medium text-center">{item.label}</span>
-                      </CardContent>
-                    </Card>
-                  </a>
+                  <Card className="card-elegant hover:shadow-lg transition-shadow cursor-pointer h-full">
+                    <CardContent className="flex flex-col items-center justify-center py-6">
+                      <Icon className={`w-10 h-10 mb-3 ${item.color}`} />
+                      <span className="text-sm font-medium text-center">{item.label}</span>
+                    </CardContent>
+                  </Card>
                 </Link>
               );
             })}
