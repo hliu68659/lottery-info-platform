@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import { Zap } from "lucide-react";
 
 interface DrawCountdownProps {
   targetTime: Date;
@@ -47,34 +46,14 @@ export function DrawCountdown({ targetTime, onComplete, showWarning = true }: Dr
     return <div className="text-muted-foreground">加载中...</div>;
   }
 
+  const timeString = `${String(timeLeft.hours).padStart(2, '0')}:${String(timeLeft.minutes).padStart(2, '0')}:${String(timeLeft.seconds).padStart(2, '0')}`;
+
   return (
-    <div className="space-y-3">
-      <div className={`flex items-center gap-2 text-2xl font-bold transition-all ${
-        timeLeft.isWarning ? "text-orange-500 animate-pulse" : "text-primary"
-      }`}>
-        <div className="flex flex-col items-center bg-card px-3 py-2 rounded-lg card-elegant border-2 border-current">
-          <span className="text-3xl font-bold">{String(timeLeft.hours).padStart(2, '0')}</span>
-          <span className="text-xs text-muted-foreground">时</span>
-        </div>
-        <span>:</span>
-        <div className="flex flex-col items-center bg-card px-3 py-2 rounded-lg card-elegant border-2 border-current">
-          <span className="text-3xl font-bold">{String(timeLeft.minutes).padStart(2, '0')}</span>
-          <span className="text-xs text-muted-foreground">分</span>
-        </div>
-        <span>:</span>
-        <div className="flex flex-col items-center bg-card px-3 py-2 rounded-lg card-elegant border-2 border-current">
-          <span className="text-3xl font-bold">{String(timeLeft.seconds).padStart(2, '0')}</span>
-          <span className="text-xs text-muted-foreground">秒</span>
-        </div>
+    <div className="w-full">
+      {/* 紫色背景横条倒计时 */}
+      <div className="w-full bg-gradient-to-r from-purple-600 to-purple-500 text-white py-3 px-4 rounded-lg font-bold text-center text-lg shadow-lg">
+        距离下期开奖: {timeString}
       </div>
-      
-      {/* 警告提示 */}
-      {timeLeft.isWarning && (
-        <div className="flex items-center justify-center gap-2 text-sm text-orange-600 font-medium animate-pulse">
-          <Zap className="w-4 h-4" />
-          <span>即将开奖，请准备好！</span>
-        </div>
-      )}
     </div>
   );
 }
