@@ -214,6 +214,7 @@ export function DrawDisplay({ lotteryName, draw, isCustom = false }: DrawDisplay
                 zodiac={ball.zodiac}
                 waveColor={ball.waveColor}
                 animate={isDrawing && ball.visible}
+                className="w-16 h-16 text-xl ring-4 ring-primary/30"
               />
             </div>
           ))}
