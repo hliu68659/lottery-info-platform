@@ -26,6 +26,8 @@ export function DrawDisplay({ lotteryName, draw, isCustom = false }: DrawDisplay
   const [isDrawing, setIsDrawing] = useState(false);
   const [timeUntilDraw, setTimeUntilDraw] = useState<number | null>(null);
   const [isSyncingPhase, setIsSyncingPhase] = useState(false);
+  const [hasAnimated, setHasAnimated] = useState(false);
+  const [lastDrawId, setLastDrawId] = useState<number | null>(null);
 
   // 计算距离开奖的时间
   const updateTimeUntilDraw = useCallback(() => {
@@ -72,48 +74,52 @@ export function DrawDisplay({ lotteryName, draw, isCustom = false }: DrawDisplay
         visible: true,
       })));
       setIsDrawing(false);
-    } else if (draw.status === "drawing" || (draw.status === "pending" && now >= drawTime)) {
-      // 开奖中或已到开奖时间 - 逐个显示号码
-      setIsDrawing(true);
-      const numbers = [
-        { number: draw.number1, color: draw.number1Color },
-        { number: draw.number2, color: draw.number2Color },
-        { number: draw.number3, color: draw.number3Color },
-        { number: draw.number4, color: draw.number4Color },
-        { number: draw.number5, color: draw.number5Color },
-        { number: draw.number6, color: draw.number6Color },
-        { number: draw.specialNumber, color: draw.specialNumberColor },
-      ];
+    } else if ((draw.status === "drawing" || (draw.status === "pending" && now >= drawTime)) && !hasAnimated) {
+      // 开奖中或已到开奖时间 - 逐个显示号码（仅在第一次加载时播放动画）
+      if (draw.id !== lastDrawId) {
+        setHasAnimated(true);
+        setLastDrawId(draw.id);
+        setIsDrawing(true);
+        const numbers = [
+          { number: draw.number1, color: draw.number1Color },
+          { number: draw.number2, color: draw.number2Color },
+          { number: draw.number3, color: draw.number3Color },
+          { number: draw.number4, color: draw.number4Color },
+          { number: draw.number5, color: draw.number5Color },
+          { number: draw.number6, color: draw.number6Color },
+          { number: draw.specialNumber, color: draw.specialNumberColor },
+        ];
 
-      // 初始化所有号码为不可见
-      setDisplayNumbers(numbers.map((num) => {
-        const waveInfo = num.number ? getWaveColorInfo(num.number) : null;
-        return {
-          number: num.number || undefined,
-          color: (waveInfo?.colorCode || num.color || "gray") as "red" | "blue" | "green" | "gray",
-          zodiac: waveInfo?.zodiac,
-          waveColor: waveInfo?.waveColor,
-          visible: false,
-        };
-      }));
+        // 初始化所有号码为不可见
+        setDisplayNumbers(numbers.map((num) => {
+          const waveInfo = num.number ? getWaveColorInfo(num.number) : null;
+          return {
+            number: num.number || undefined,
+            color: (waveInfo?.colorCode || num.color || "gray") as "red" | "blue" | "green" | "gray",
+            zodiac: waveInfo?.zodiac,
+            waveColor: waveInfo?.waveColor,
+            visible: false,
+          };
+        }));
 
-      // 每隔8秒显示一个号码
-      numbers.forEach((num, index) => {
-        setTimeout(() => {
-          setDisplayNumbers(prev => {
-            const waveInfo = num.number ? getWaveColorInfo(num.number) : null;
-            const newNumbers = [...prev];
-            newNumbers[index] = {
-              number: num.number || undefined,
-              color: (waveInfo?.colorCode || num.color || "gray") as "red" | "blue" | "green" | "gray",
-              zodiac: waveInfo?.zodiac,
-              waveColor: waveInfo?.waveColor,
-              visible: true,
-            };
-            return newNumbers;
-          });
-        }, index * 8000);
-      });
+        // 每隔8秒显示一个号码
+        numbers.forEach((num, index) => {
+          setTimeout(() => {
+            setDisplayNumbers(prev => {
+              const waveInfo = num.number ? getWaveColorInfo(num.number) : null;
+              const newNumbers = [...prev];
+              newNumbers[index] = {
+                number: num.number || undefined,
+                color: (waveInfo?.colorCode || num.color || "gray") as "red" | "blue" | "green" | "gray",
+                zodiac: waveInfo?.zodiac,
+                waveColor: waveInfo?.waveColor,
+                visible: true,
+              };
+              return newNumbers;
+            });
+          }, index * 8000);
+        });
+      }
     } else if (draw.status === "completed") {
       // 已完成 - 显示所有号码
       const numbers = [

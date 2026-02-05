@@ -78,6 +78,10 @@ export default function AdminMaterials() {
     onError: (error) => toast.error(`更新失败: ${error.message}`),
   });
 
+  const uploadImageMutation = trpc.upload.image.useMutation({
+    onError: (error) => toast.error(`Upload failed: ${error.message}`),
+  });
+
   const deleteImageMutation = trpc.imageBlocks.delete.useMutation({
     onSuccess: () => {
       toast.success("删除成功");
@@ -176,7 +180,7 @@ export default function AdminMaterials() {
                           reader.onload = async (e) => {
                             try {
                               const base64 = (e.target?.result as string).split(',')[1];
-                              const result = await trpc.upload.image.useMutation().mutateAsync({
+                              const result = await uploadImageMutation.mutateAsync({
                                 filename: file.name,
                                 base64,
                               });

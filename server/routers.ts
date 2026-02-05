@@ -18,6 +18,7 @@ import { eq, desc } from "drizzle-orm";
 import { generateImageFromText, generateImageByType } from "./imageGeneration";
 import { storagePut } from "../server/storage";
 import jwt from "jsonwebtoken";
+import { z } from "zod";
 
 // 管理员权限检查中间件
 const adminProcedure = protectedProcedure.use(({ ctx, next }) => {
@@ -452,6 +453,40 @@ export const appRouter = router({
           throw new TRPCError({
             code: 'INTERNAL_SERVER_ERROR',
             message: `生成失败: ${error instanceof Error ? error.message : '未知错误'}`,
+          });
+        }
+      }),
+  }),
+
+  // ============ 文件上传 ============
+  upload: router({
+    image: protectedProcedure
+      .input(z.object({
+        filename: z.string(),
+        base64: z.string(),
+      }))
+      .mutation(async ({ input }) => {
+        try {
+          // 将base64转换为Buffer
+          const buffer = Buffer.from(input.base64, 'base64');
+          
+          // 生成唯一的文件名
+          const timestamp = Date.now();
+          const random = Math.random().toString(36).substring(2, 8);
+          const ext = input.filename.split('.').pop() || 'jpg';
+          const fileKey = `uploads/${timestamp}-${random}.${ext}`;
+          
+          // 上传到S3
+          const result = await storagePut(fileKey, buffer, 'image/jpeg');
+          
+          return {
+            url: result.url,
+            key: result.key,
+          };
+        } catch (error) {
+          throw new TRPCError({
+            code: 'INTERNAL_SERVER_ERROR',
+            message: `上传失败: ${error instanceof Error ? error.message : '未知错误'}`,
           });
         }
       }),
