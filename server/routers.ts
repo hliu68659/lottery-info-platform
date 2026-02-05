@@ -34,6 +34,18 @@ const ADMIN_PASSWORD = "kaijiang1866333";
 export const appRouter = router({
   system: systemRouter,
   
+  // ============ 认证管理 ============
+  auth: router({
+    me: protectedProcedure
+      .query(async ({ ctx }) => {
+        return ctx.user;
+      }),
+    logout: protectedProcedure
+      .mutation(async ({ ctx }) => {
+        return { success: true };
+      }),
+  }),
+  
   // ============ 后台登入 ============
   admin: router({
     login: publicProcedure
@@ -48,100 +60,106 @@ export const appRouter = router({
             message: '账号或密码错误' 
           });
         }
-
-        // 生成JWT token
+        
         const token = jwt.sign(
           { username: ADMIN_USERNAME, type: 'admin' },
           process.env.JWT_SECRET || 'default-secret',
           { expiresIn: '7d' }
         );
-
-        return { success: true, token };
+        
+        return {
+          success: true,
+          token,
+          message: '登入成功'
+        };
       }),
   }),
-  
-  // ============ 文件上传 ============
-  upload: router({
-    image: protectedProcedure
-      .input(z.object({
-        filename: z.string(),
-        base64: z.string(),
-      }))
-      .mutation(async ({ input, ctx }) => {
+
+  // ============ 彩票类型管理 ============
+  lotteryTypes: router({
+    list: publicProcedure
+      .input(z.object({ enabledOnly: z.boolean().optional() }).optional())
+      .query(async ({ input }) => {
         try {
-          const buffer = Buffer.from(input.base64, 'base64');
-          const timestamp = Date.now();
-          const random = Math.random().toString(36).substring(2, 8);
-          const fileKey = `materials/${ctx.user.id}/${timestamp}-${random}-${input.filename}`;
-          const { url } = await storagePut(fileKey, buffer, 'image/jpeg');
-          return { url };
+          const database = await getDb();
+          if (!database) return [];
+          
+          if (input?.enabledOnly) {
+            return await database.query.lotteryTypes.findMany({
+              where: eq(lotteryTypes.enabled, true),
+            });
+          }
+          return await database.query.lotteryTypes.findMany();
         } catch (error) {
-          console.error('Image upload failed:', error);
-          throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Image upload failed' });
+          console.error('Error fetching lottery types:', error);
+          return [];
         }
       }),
   }),
-  
-  auth: router({
-    me: publicProcedure.query(opts => opts.ctx.user),
-    logout: publicProcedure.mutation(({ ctx }) => {
-      const cookieOptions = getSessionCookieOptions(ctx.req);
-      ctx.res.clearCookie(COOKIE_NAME, { ...cookieOptions, maxAge: -1 });
-      return { success: true } as const;
-    }),
-  }),
 
-  // ============ 文字资料板块 ============
+  // ============ 文字资料板块管理 ============
   textBlocks: router({
     list: publicProcedure
-      .input(z.object({
-        location: z.enum(["home", "shensuan", "guanjiapo", "huangdaxian"]).optional(),
-        visibleOnly: z.boolean().optional(),
-      }))
+      .input(z.object({ location: z.string().optional() }).optional())
       .query(async ({ input }) => {
-        return await db.getTextBlocks(input.location, input.visibleOnly);
+        const database = await getDb();
+        if (!database) return [];
+        
+        if (input?.location) {
+          return await database.query.textBlocks.findMany({
+            where: eq(textBlocks.location, input.location as any),
+            orderBy: desc(textBlocks.displayOrder),
+          });
+        }
+        return await database.query.textBlocks.findMany({
+          orderBy: desc(textBlocks.displayOrder),
+        });
       }),
-    
-    getById: publicProcedure
-      .input(z.object({ id: z.number() }))
-      .query(async ({ input }) => {
-        return await db.getTextBlockById(input.id);
-      }),
-    
+
     create: adminProcedure
       .input(z.object({
         title: z.string(),
         content: z.string(),
-        displayOrder: z.number().default(0),
-        visible: z.boolean().default(true),
-        location: z.enum(["home", "shensuan", "guanjiapo", "huangdaxian"]).default("home"),
+        location: z.enum(["home", "shensuan", "guanjiapo", "huangdaxian"]),
+        displayOrder: z.number().optional(),
       }))
       .mutation(async ({ input }) => {
         const database = await getDb();
         if (!database) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: '数据库不可用' });
         
-        const result = await database.insert(textBlocks).values(input);
-        return { id: Number(result[0].insertId), success: true };
+        const result = await database.insert(textBlocks).values({
+          title: input.title,
+          content: input.content,
+          location: input.location,
+          displayOrder: input.displayOrder || 0,
+          visible: true,
+        });
+        
+        return { id: Number(result[0].insertId), ...input };
       }),
-    
+
     update: adminProcedure
       .input(z.object({
         id: z.number(),
         title: z.string().optional(),
         content: z.string().optional(),
-        displayOrder: z.number().optional(),
         visible: z.boolean().optional(),
-        location: z.enum(["home", "shensuan", "guanjiapo", "huangdaxian"]).optional(),
+        displayOrder: z.number().optional(),
       }))
       .mutation(async ({ input }) => {
         const database = await getDb();
         if (!database) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: '数据库不可用' });
         
-        const { id, ...updates } = input;
-        await database.update(textBlocks).set(updates).where(eq(textBlocks.id, id));
+        const updates: any = {};
+        if (input.title) updates.title = input.title;
+        if (input.content) updates.content = input.content;
+        if (input.visible !== undefined) updates.visible = input.visible;
+        if (input.displayOrder !== undefined) updates.displayOrder = input.displayOrder;
+        
+        await database.update(textBlocks).set(updates).where(eq(textBlocks.id, input.id));
         return { success: true };
       }),
-    
+
     delete: adminProcedure
       .input(z.object({ id: z.number() }))
       .mutation(async ({ input }) => {
@@ -153,59 +171,73 @@ export const appRouter = router({
       }),
   }),
 
-  // ============ 图片资料板块 ============
+  // ============ 图片资料板块管理 ============
   imageBlocks: router({
     list: publicProcedure
-      .input(z.object({
-        location: z.enum(["home", "shensuan", "guanjiapo", "huangdaxian"]).optional(),
-        visibleOnly: z.boolean().optional(),
-      }))
+      .input(z.object({ location: z.string().optional() }).optional())
       .query(async ({ input }) => {
-        return await db.getImageBlocks(input.location, input.visibleOnly);
+        const database = await getDb();
+        if (!database) return [];
+        
+        if (input?.location) {
+          return await database.query.imageBlocks.findMany({
+            where: eq(imageBlocks.location, input.location as any),
+            orderBy: desc(imageBlocks.displayOrder),
+          });
+        }
+        return await database.query.imageBlocks.findMany({
+          orderBy: desc(imageBlocks.displayOrder),
+        });
       }),
-    
-    getById: publicProcedure
-      .input(z.object({ id: z.number() }))
-      .query(async ({ input }) => {
-        return await db.getImageBlockById(input.id);
-      }),
-    
+
     create: adminProcedure
       .input(z.object({
         title: z.string(),
         imageUrl: z.string(),
         description: z.string().optional(),
-        displayOrder: z.number().default(0),
-        visible: z.boolean().default(true),
-        location: z.enum(["home", "shensuan", "guanjiapo", "huangdaxian"]).default("home"),
+        location: z.enum(["home", "shensuan", "guanjiapo", "huangdaxian"]),
+        displayOrder: z.number().optional(),
       }))
       .mutation(async ({ input }) => {
         const database = await getDb();
         if (!database) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: '数据库不可用' });
         
-        const result = await database.insert(imageBlocks).values(input);
-        return { id: Number(result[0].insertId), success: true };
+        const result = await database.insert(imageBlocks).values({
+          title: input.title,
+          imageUrl: input.imageUrl,
+          description: input.description,
+          location: input.location,
+          displayOrder: input.displayOrder || 0,
+          visible: true,
+        });
+        
+        return { id: Number(result[0].insertId), ...input };
       }),
-    
+
     update: adminProcedure
       .input(z.object({
         id: z.number(),
         title: z.string().optional(),
         imageUrl: z.string().optional(),
         description: z.string().optional(),
-        displayOrder: z.number().optional(),
         visible: z.boolean().optional(),
-        location: z.enum(["home", "shensuan", "guanjiapo", "huangdaxian"]).optional(),
+        displayOrder: z.number().optional(),
       }))
       .mutation(async ({ input }) => {
         const database = await getDb();
         if (!database) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: '数据库不可用' });
         
-        const { id, ...updates } = input;
-        await database.update(imageBlocks).set(updates).where(eq(imageBlocks.id, id));
+        const updates: any = {};
+        if (input.title) updates.title = input.title;
+        if (input.imageUrl) updates.imageUrl = input.imageUrl;
+        if (input.description !== undefined) updates.description = input.description;
+        if (input.visible !== undefined) updates.visible = input.visible;
+        if (input.displayOrder !== undefined) updates.displayOrder = input.displayOrder;
+        
+        await database.update(imageBlocks).set(updates).where(eq(imageBlocks.id, input.id));
         return { success: true };
       }),
-    
+
     delete: adminProcedure
       .input(z.object({ id: z.number() }))
       .mutation(async ({ input }) => {
@@ -217,74 +249,44 @@ export const appRouter = router({
       }),
   }),
 
-  // ============ 号码属性 ============
+  // ============ 号码属性管理 ============
   numberAttributes: router({
     getByNumber: publicProcedure
       .input(z.object({ number: z.number().min(1).max(49) }))
       .query(async ({ input }) => {
         return await db.getNumberAttribute(input.number);
       }),
-    
-    getAll: publicProcedure.query(async () => {
-      return await db.getAllNumberAttributes();
-    }),
-    
-    update: adminProcedure
-      .input(z.object({
-        number: z.number().min(1).max(49),
-        zodiac: z.string(),
-        color: z.enum(["red", "blue", "green"]),
-      }))
-      .mutation(async ({ input }) => {
-        const database = await getDb();
-        if (!database) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: '数据库不可用' });
-        
-        await database
-          .insert(numberAttributes)
-          .values(input)
-          .onDuplicateKeyUpdate({ set: { zodiac: input.zodiac, color: input.color } });
-        
-        return { success: true };
-      }),
   }),
 
-  // ============ 彩票类型 ============
-  lotteryTypes: router({
-    list: publicProcedure
-      .input(z.object({ enabledOnly: z.boolean().optional() }))
-      .query(async ({ input }) => {
-        return await db.getLotteryTypes(input.enabledOnly);
-      }),
-    
-    getByCode: publicProcedure
-      .input(z.object({ code: z.string() }))
-      .query(async ({ input }) => {
-        return await db.getLotteryTypeByCode(input.code);
-      }),
-  }),
-
-  // ============ 开奖记录 ============
+  // ============ 开奖记录管理 ============
   lotteryDraws: router({
     list: publicProcedure
-      .input(z.object({
+      .input(z.object({ 
         lotteryTypeCode: z.string().optional(),
-        limit: z.number().default(20),
-      }))
+        limit: z.number().optional(),
+        offset: z.number().optional(),
+      }).optional())
       .query(async ({ input }) => {
         const database = await getDb();
         if (!database) return [];
         
-        let query = database.select().from(lotteryDraws);
-        
-        if (input.lotteryTypeCode) {
-          const lotteryType = await database.select().from(lotteryTypes).where(eq(lotteryTypes.code, input.lotteryTypeCode));
-          if (lotteryType.length > 0) {
-            query = query.where(eq(lotteryDraws.lotteryTypeId, lotteryType[0].id)) as any;
+        try {
+          if (input?.limit) {
+            return await database.query.lotteryDraws.findMany({
+              orderBy: desc(lotteryDraws.drawTime),
+              limit: input.limit,
+              offset: input.offset || 0,
+            });
           }
+          return await database.query.lotteryDraws.findMany({
+            orderBy: desc(lotteryDraws.drawTime),
+          });
+        } catch (error) {
+          console.error('Error fetching lottery draws:', error);
+          return [];
         }
-        return await query.orderBy(desc(lotteryDraws.drawTime)).limit(input.limit);
       }),
-    
+
     getById: publicProcedure
       .input(z.object({ id: z.number() }))
       .query(async ({ input }) => {
@@ -303,6 +305,15 @@ export const appRouter = router({
         const database = await getDb();
         if (!database) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: '数据库不可用' });
         
+        // 根据彩票类型代码获取彩票类型ID
+        const lotteryType = await database.query.lotteryTypes.findFirst({
+          where: eq(lotteryTypes.code, input.lotteryTypeCode),
+        });
+        
+        if (!lotteryType) {
+          throw new TRPCError({ code: 'BAD_REQUEST', message: '彩票类型不存在' });
+        }
+        
         // 计算下期时间
         const nextDrawTime = new Date(input.drawTime);
         nextDrawTime.setDate(nextDrawTime.getDate() + 1);
@@ -316,9 +327,13 @@ export const appRouter = router({
           input.numbers.map(num => db.getNumberAttribute(num))
         );
         
+        // 从drawTime中提取年份
+        const year = input.drawTime.getFullYear();
+        
         const drawData: any = {
-          lotteryTypeCode: input.lotteryTypeCode,
+          lotteryTypeId: lotteryType.id,
           issueNumber: input.issueNumber,
+          year: year,
           drawTime: input.drawTime,
           nextDrawTime: nextDrawTime,
           nextIssueNumber: nextIssue,
@@ -392,7 +407,8 @@ export const appRouter = router({
         await database.update(lotteryDraws).set(updates).where(eq(lotteryDraws.id, input.id));
         return { success: true };
       }),
-    
+
+    // 删除开奖记录
     delete: adminProcedure
       .input(z.object({ id: z.number() }))
       .mutation(async ({ input }) => {
@@ -408,40 +424,37 @@ export const appRouter = router({
   aiImage: router({
     generateFromText: adminProcedure
       .input(z.object({
-        text: z.string().min(1),
-        style: z.enum(["elegant", "mystical", "fortune", "wisdom", "nature"]).optional(),
+        text: z.string(),
+        style: z.string().optional(),
       }))
       .mutation(async ({ input }) => {
         try {
           const imageUrl = await generateImageFromText(input.text, input.style);
-          return { imageUrl };
+          return { success: true, imageUrl };
         } catch (error) {
-          console.error('Image generation failed:', error);
-          throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Image generation failed' });
+          throw new TRPCError({
+            code: 'INTERNAL_SERVER_ERROR',
+            message: `生成失败: ${error instanceof Error ? error.message : '未知错误'}`,
+          });
         }
       }),
-    
+
     generateByType: adminProcedure
       .input(z.object({
-        type: z.enum(["fortune", "zodiac", "number", "custom"]),
-        data: z.record(z.string(), z.any()).optional(),
+        lotteryTypeCode: z.string(),
+        style: z.string().optional(),
       }))
       .mutation(async ({ input }) => {
         try {
-          const imageUrl = await generateImageByType(input.type, "");
-          return { imageUrl };
+          const imageUrl = await generateImageByType(input.lotteryTypeCode, input.style);
+          return { success: true, imageUrl };
         } catch (error) {
-          console.error('Image generation failed:', error);
-          throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Image generation failed' });
+          throw new TRPCError({
+            code: 'INTERNAL_SERVER_ERROR',
+            message: `生成失败: ${error instanceof Error ? error.message : '未知错误'}`,
+          });
         }
       }),
-  }),
-
-  // ============ 生肖卡片 ============
-  zodiacCard: router({
-    list: publicProcedure.query(async () => {
-      return await db.getAllZodiacCards();
-    }),
   }),
 });
 

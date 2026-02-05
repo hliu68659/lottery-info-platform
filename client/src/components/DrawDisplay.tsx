@@ -206,7 +206,7 @@ export function DrawDisplay({ lotteryName, draw, isCustom = false }: DrawDisplay
         {/* 开奖号码 */}
         <div className="flex justify-center items-center gap-3 flex-wrap">
           {displayNumbers.slice(0, 6).map((ball, index) => (
-            <div key={index} className={ball.visible ? "block" : "invisible"}>
+            <div key={index} className={ball.visible ? "block" : "opacity-0 pointer-events-none"}>
               <LotteryBall
                 number={ball.number}
                 color={ball.color}
@@ -214,14 +214,14 @@ export function DrawDisplay({ lotteryName, draw, isCustom = false }: DrawDisplay
                 zodiac={ball.zodiac}
                 waveColor={ball.waveColor}
                 animate={isDrawing && ball.visible}
-                className="w-16 h-16 text-xl ring-4 ring-primary/30"
+                className="w-16 h-16 text-xl ring-4 ring-primary/30 transition-all duration-500"
               />
             </div>
           ))}
           {displayNumbers[6] && (
             <>
               <div className="text-3xl text-primary font-bold mx-2">+</div>
-              <div className={displayNumbers[6].visible ? "block" : "invisible"}>
+              <div className={displayNumbers[6].visible ? "block" : "opacity-0 pointer-events-none"}>
                 <LotteryBall
                   number={displayNumbers[6].number}
                   color={displayNumbers[6].color}
@@ -229,7 +229,7 @@ export function DrawDisplay({ lotteryName, draw, isCustom = false }: DrawDisplay
                   zodiac={displayNumbers[6].zodiac}
                   waveColor={displayNumbers[6].waveColor}
                   animate={isDrawing && displayNumbers[6].visible}
-                  className="w-16 h-16 text-xl ring-4 ring-primary/30"
+                  className="w-16 h-16 text-xl ring-4 ring-primary/30 transition-all duration-500"
                 />
               </div>
             </>

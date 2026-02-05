@@ -1,0 +1,22 @@
+{
+  "query": "SELECT * FROM lottery_types LIMIT 1;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway03.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2pcRLaGQYcra4KS.root --database 2Med8dGTm85GozrpJFtDTP --execute SELECT * FROM lottery_types LIMIT 1;",
+  "rows": [
+    {
+      "id": "1",
+      "code": "xinao_midnight",
+      "name": "新澳午夜彩",
+      "isCustom": "1",
+      "apiUrl": "NULL",
+      "intervalHours": "2",
+      "displayOrder": "1",
+      "enabled": "1",
+      "createdAt": "2026-01-28 01:29:15",
+      "updatedAt": "2026-01-28 01:29:15"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tcode\tname\tisCustom\tapiUrl\tintervalHours\tdisplayOrder\tenabled\tcreatedAt\tupdatedAt\n1\txinao_midnight\t新澳午夜彩\t1\tNULL\t2\t1\t1\t2026-01-28 01:29:15\t2026-01-28 01:29:15\n",
+  "stderr": "",
+  "execution_time_ms": 1598
+}

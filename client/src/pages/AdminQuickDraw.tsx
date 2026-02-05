@@ -189,7 +189,7 @@ export default function AdminQuickDraw() {
                       <SelectValue placeholder="请选择彩票类型" />
                     </SelectTrigger>
                     <SelectContent>
-                      {lotteryTypes?.filter(t => t.isCustom).map((type) => (
+                      {lotteryTypes?.map((type) => (
                         <SelectItem key={type.id} value={type.id.toString()}>
                           {type.name}
                         </SelectItem>
