@@ -337,7 +337,7 @@ export const appRouter = router({
           drawTime: input.drawTime,
           nextDrawTime: nextDrawTime,
           nextIssueNumber: nextIssue,
-          status: 'completed',
+          status: 'pending',
         };
         
         input.numbers.forEach((num, index) => {
