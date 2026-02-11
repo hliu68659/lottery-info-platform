@@ -21,7 +21,7 @@ import { toast } from "sonner";
 import { Edit, Trash2, Plus, Eye, EyeOff } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { AIImageGeneratorDialog } from "@/components/AIImageGeneratorDialog";
-import { RichTextEditor } from "@/components/RichTextEditor";
+import { ContentEditableEditor } from "@/components/ContentEditableEditor";
 
 export default function AdminMaterials() {
   const { user } = useAuth();
@@ -170,7 +170,7 @@ export default function AdminMaterials() {
                   </div>
                   <div className="space-y-2">
                     <Label>内容</Label>
-                    <RichTextEditor
+                    <ContentEditableEditor
                       value={newText.content}
                       onChange={(content) => setNewText({ ...newText, content })}
                       placeholder="输入内容，支持文字颜色、加粗、斜体等格式..."

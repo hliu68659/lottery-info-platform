@@ -81,12 +81,14 @@
 - [x] 有序列表（Ordered List）
 - [x] 文本颜色
 - [x] 文本对齐（靠左、居中、靠右）
-- [ ] 标题（H1-H6）
-- [ ] 下划线（Underline）
-- [ ] 删除线（Strikethrough）
-- [ ] 链接（Link）
-- [ ] 代码块（Code Block）
-- [ ] 引用块（Blockquote）
+- [x] 标题（H1-H3）
+- [x] 下划线（Underline）
+- [x] 删除线（Strikethrough）
+- [x] 链接（Link）
+- [x] 代码块（Code Block）
+- [x] 引用块（Blockquote）
 - [ ] 表格（Table）
-- [ ] 撤销（Undo）
-- [ ] 重做（Redo）
+- [x] 撤销（Undo）
+- [x] 重做（Redo）
+- [x] 图片上传（Image Upload）
+- [x] ContentEditable编辑器实现
