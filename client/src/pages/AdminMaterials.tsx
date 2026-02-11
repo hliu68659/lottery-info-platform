@@ -156,11 +156,11 @@ export default function AdminMaterials() {
                   新建文字资料
                 </Button>
               </DialogTrigger>
-              <DialogContent>
+              <DialogContent className="max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
                   <DialogTitle>新建文字资料</DialogTitle>
                 </DialogHeader>
-                <div className="space-y-4">
+                <div className="space-y-4 pr-4">
                   <div className="space-y-2">
                     <Label>标题</Label>
                     <Input
@@ -277,11 +277,11 @@ export default function AdminMaterials() {
                   新建图片资料
                 </Button>
               </DialogTrigger>
-              <DialogContent>
+              <DialogContent className="max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
                   <DialogTitle>新建图片资料</DialogTitle>
                 </DialogHeader>
-                <div className="space-y-4">
+                <div className="space-y-4 pr-4">
                   <div className="space-y-2">
                     <Label>标题</Label>
                     <Input
