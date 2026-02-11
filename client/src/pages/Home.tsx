@@ -121,7 +121,7 @@ export default function Home() {
         <h1 className="text-2xl font-bold">最新开奖</h1>
       </div>
 
-      <div className="container mx-auto px-4 py-8 space-y-8">
+      <div className="container mx-auto px-4 py-6 space-y-6">
         {/* 最新开奖部分 */}
         <section className="bg-white rounded-lg p-6 shadow-lg">
           <Tabs value={activeTab} onValueChange={setActiveTab}>
@@ -185,17 +185,17 @@ export default function Home() {
         {textBlocks && textBlocks.length > 0 && (
           <section>
             <h2 className="text-3xl font-bold mb-8 text-center text-white drop-shadow-lg">资讯动态</h2>
-            <div className="grid grid-cols-1 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               {textBlocks.map((block, index) => (
-                <div key={block.id} className="bg-white rounded-lg p-6 shadow-lg">
-                  <div className="flex items-start gap-4">
-                    <div className="bg-amber-900 text-white rounded-full w-10 h-10 flex items-center justify-center font-bold flex-shrink-0">
+                <div key={block.id} className="bg-white rounded-lg p-4 shadow-lg">
+                  <div className="flex items-start gap-3">
+                    <div className="bg-amber-900 text-white rounded-full w-8 h-8 flex items-center justify-center font-bold flex-shrink-0 text-sm">
                       {index + 1}
                     </div>
-                    <div className="flex-1">
-                      <h3 className="font-bold text-lg mb-2">{block.title}</h3>
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-bold text-sm mb-1">{block.title}</h3>
                       <div 
-                        className="text-sm text-gray-700 line-clamp-3"
+                        className="text-xs text-gray-700 line-clamp-2 break-words"
                         dangerouslySetInnerHTML={{ __html: block.content }}
                       />
                     </div>
@@ -210,17 +210,17 @@ export default function Home() {
         {imageBlocks && imageBlocks.length > 0 && (
           <section>
             <h2 className="text-3xl font-bold mb-8 text-center text-white drop-shadow-lg">精选图片</h2>
-            <div className="grid grid-cols-1 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {imageBlocks.map((block) => (
                 <div key={block.id} className="bg-white rounded-lg overflow-hidden shadow-lg">
                   <img 
                     src={block.imageUrl} 
                     alt={block.title}
-                    className="w-full h-48 object-cover"
+                    className="w-full h-40 object-cover"
                   />
-                  <div className="p-4">
-                    <h3 className="font-bold mb-2">{block.title}</h3>
-                    <p className="text-sm text-gray-700 line-clamp-2">{block.description}</p>
+                  <div className="p-3">
+                    <h3 className="font-bold text-sm mb-1">{block.title}</h3>
+                    <p className="text-xs text-gray-700 line-clamp-2">{block.description}</p>
                   </div>
                 </div>
               ))}
