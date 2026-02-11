@@ -23,42 +23,41 @@ export default function MaterialDetail({ location, title }: MaterialDetailProps)
   });
 
   return (
-    <div className="min-h-screen elegant-gradient">
+    <div className="min-h-screen elegant-gradient overflow-x-hidden">
       {/* 头部 */}
-      <header className="bg-card/80 backdrop-blur-sm border-b border-border sticky top-0 z-50">
-        <div className="container py-4">
-          <div className="flex items-center gap-4">
+      <header className="bg-card/80 backdrop-blur-sm border-b border-border sticky top-0 z-50 w-full">
+        <div className="container px-4 sm:px-6 lg:px-8 py-4 mx-auto">
+          <div className="flex items-center gap-2 sm:gap-4 min-w-0">
             <Button 
               variant="ghost" 
               size="icon"
               onClick={() => navigate("/")}
+              className="flex-shrink-0"
             >
               <ArrowLeft className="w-5 h-5" />
             </Button>
-            <h1 className="text-3xl font-bold golden-shine bg-clip-text text-transparent">
+            <h1 className="text-xl sm:text-2xl md:text-3xl font-bold golden-shine bg-clip-text text-transparent truncate">
               {title}
             </h1>
           </div>
         </div>
       </header>
 
-      <main className="container py-8 space-y-12">
+      <main className="container px-4 sm:px-6 lg:px-8 py-6 sm:py-8 space-y-8 sm:space-y-12 mx-auto w-full max-w-full">
         {/* 文字资料板块 */}
-        <section>
-          <h2 className="text-2xl font-bold mb-6">资料内容</h2>
+        <section className="w-full">
+          <h2 className="text-xl sm:text-2xl font-bold mb-4 sm:mb-6">资料内容</h2>
           {loadingText ? (
             <div className="text-center text-muted-foreground">加载中...</div>
           ) : textBlocks && textBlocks.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 w-full">
               {textBlocks.map((block) => (
                 <Card key={block.id} className="card-elegant">
                   <CardHeader>
                     <CardTitle className="text-lg">{block.title}</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <p className="text-sm text-muted-foreground whitespace-pre-wrap">
-                      {block.content}
-                    </p>
+                    <div className="text-sm text-muted-foreground whitespace-pre-wrap break-words overflow-hidden" dangerouslySetInnerHTML={{ __html: block.content }} />
                   </CardContent>
                 </Card>
               ))}
@@ -74,9 +73,9 @@ export default function MaterialDetail({ location, title }: MaterialDetailProps)
 
         {/* 图片资料板块 */}
         {imageBlocks && imageBlocks.length > 0 && (
-          <section>
-            <h2 className="text-2xl font-bold mb-6">图片资料</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <section className="w-full">
+            <h2 className="text-xl sm:text-2xl font-bold mb-4 sm:mb-6">图片资料</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 w-full">
               {imageBlocks.map((block) => (
                 <Card key={block.id} className="card-elegant overflow-hidden">
                   <div className="aspect-video relative overflow-hidden">
@@ -87,9 +86,9 @@ export default function MaterialDetail({ location, title }: MaterialDetailProps)
                     />
                   </div>
                   <CardContent className="p-4">
-                    <h3 className="font-semibold mb-2">{block.title}</h3>
+                    <h3 className="font-semibold mb-2 text-sm sm:text-base break-words">{block.title}</h3>
                     {block.description && (
-                      <p className="text-sm text-muted-foreground">{block.description}</p>
+                      <p className="text-xs sm:text-sm text-muted-foreground break-words">{block.description}</p>
                     )}
                   </CardContent>
                 </Card>
@@ -100,8 +99,8 @@ export default function MaterialDetail({ location, title }: MaterialDetailProps)
       </main>
 
       {/* 页脚 */}
-      <footer className="bg-card/80 backdrop-blur-sm border-t border-border mt-12">
-        <div className="container py-6 text-center text-sm text-muted-foreground">
+      <footer className="bg-card/80 backdrop-blur-sm border-t border-border mt-8 sm:mt-12 w-full">
+        <div className="container px-4 sm:px-6 lg:px-8 py-4 sm:py-6 text-center text-xs sm:text-sm text-muted-foreground mx-auto">
           <p>© 2026 彩票资讯平台 - 仅供娱乐参考</p>
         </div>
       </footer>
