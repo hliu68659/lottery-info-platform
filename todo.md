@@ -72,3 +72,21 @@
 - [ ] 实现开奖数据实时更新和同步
 - [ ] 添加开奖完成通知
 - [ ] 优化开奖页面的视觉效果
+
+
+## 编辑器功能完整实现
+- [x] 粗体（Bold）
+- [x] 斜体（Italic）
+- [x] 列表（Bullet List）
+- [x] 有序列表（Ordered List）
+- [x] 文本颜色
+- [x] 文本对齐（靠左、居中、靠右）
+- [ ] 标题（H1-H6）
+- [ ] 下划线（Underline）
+- [ ] 删除线（Strikethrough）
+- [ ] 链接（Link）
+- [ ] 代码块（Code Block）
+- [ ] 引用块（Blockquote）
+- [ ] 表格（Table）
+- [ ] 撤销（Undo）
+- [ ] 重做（Redo）

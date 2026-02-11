@@ -3,6 +3,7 @@ import StarterKit from '@tiptap/starter-kit';
 import { TextStyle } from '@tiptap/extension-text-style';
 import Color from '@tiptap/extension-color';
 import Image from '@tiptap/extension-image';
+import TextAlign from '@tiptap/extension-text-align';
 import { Button } from '@/components/ui/button';
 import {
   Bold,
@@ -13,6 +14,9 @@ import {
   Image as ImageIcon,
   Undo2,
   Redo2,
+  AlignLeft,
+  AlignCenter,
+  AlignRight,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import './RichTextEditor.css';
@@ -41,6 +45,9 @@ export function RichTextEditor({
       }),
       Image.configure({
         allowBase64: true,
+      }),
+      TextAlign.configure({
+        types: ['heading', 'paragraph'],
       }),
     ],
     content: value,
@@ -149,6 +156,38 @@ export function RichTextEditor({
             />
           ))}
         </div>
+
+        <div className="w-px bg-gray-300 mx-1" />
+
+        <Button
+          size="sm"
+          variant={editor.isActive({ textAlign: 'left' }) ? 'default' : 'outline'}
+          onClick={() => editor.chain().focus().setTextAlign('left').run()}
+          className="w-8 h-8 p-0"
+          title="靠左"
+        >
+          <AlignLeft size={16} />
+        </Button>
+
+        <Button
+          size="sm"
+          variant={editor.isActive({ textAlign: 'center' }) ? 'default' : 'outline'}
+          onClick={() => editor.chain().focus().setTextAlign('center').run()}
+          className="w-8 h-8 p-0"
+          title="居中"
+        >
+          <AlignCenter size={16} />
+        </Button>
+
+        <Button
+          size="sm"
+          variant={editor.isActive({ textAlign: 'right' }) ? 'default' : 'outline'}
+          onClick={() => editor.chain().focus().setTextAlign('right').run()}
+          className="w-8 h-8 p-0"
+          title="靠右"
+        >
+          <AlignRight size={16} />
+        </Button>
 
         <div className="w-px bg-gray-300 mx-1" />
 

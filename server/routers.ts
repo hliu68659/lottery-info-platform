@@ -18,7 +18,6 @@ import { eq, desc } from "drizzle-orm";
 import { generateImageFromText, generateImageByType } from "./imageGeneration";
 import { storagePut } from "../server/storage";
 import jwt from "jsonwebtoken";
-import { z } from "zod";
 
 // 管理员权限检查中间件
 const adminProcedure = protectedProcedure.use(({ ctx, next }) => {
@@ -86,11 +85,9 @@ export const appRouter = router({
           if (!database) return [];
           
           if (input?.enabledOnly) {
-            return await database.query.lotteryTypes.findMany({
-              where: eq(lotteryTypes.enabled, true),
-            });
+            return await database.select().from(lotteryTypes).where(eq(lotteryTypes.enabled, true));
           }
-          return await database.query.lotteryTypes.findMany();
+          return await database.select().from(lotteryTypes);
         } catch (error) {
           console.error('Error fetching lottery types:', error);
           return [];
@@ -107,14 +104,9 @@ export const appRouter = router({
         if (!database) return [];
         
         if (input?.location) {
-          return await database.query.textBlocks.findMany({
-            where: eq(textBlocks.location, input.location as any),
-            orderBy: desc(textBlocks.displayOrder),
-          });
+          return await database.select().from(textBlocks).where(eq(textBlocks.location, input.location as any)).orderBy(desc(textBlocks.displayOrder));
         }
-        return await database.query.textBlocks.findMany({
-          orderBy: desc(textBlocks.displayOrder),
-        });
+        return await database.select().from(textBlocks).orderBy(desc(textBlocks.displayOrder));
       }),
 
     create: adminProcedure
@@ -181,14 +173,9 @@ export const appRouter = router({
         if (!database) return [];
         
         if (input?.location) {
-          return await database.query.imageBlocks.findMany({
-            where: eq(imageBlocks.location, input.location as any),
-            orderBy: desc(imageBlocks.displayOrder),
-          });
+          return await database.select().from(imageBlocks).where(eq(imageBlocks.location, input.location as any)).orderBy(desc(imageBlocks.displayOrder));
         }
-        return await database.query.imageBlocks.findMany({
-          orderBy: desc(imageBlocks.displayOrder),
-        });
+        return await database.select().from(imageBlocks).orderBy(desc(imageBlocks.displayOrder));
       }),
 
     create: adminProcedure
@@ -273,15 +260,9 @@ export const appRouter = router({
         
         try {
           if (input?.limit) {
-            return await database.query.lotteryDraws.findMany({
-              orderBy: desc(lotteryDraws.drawTime),
-              limit: input.limit,
-              offset: input.offset || 0,
-            });
+            return await database.select().from(lotteryDraws).orderBy(desc(lotteryDraws.drawTime)).limit(input.limit).offset(input.offset || 0);
           }
-          return await database.query.lotteryDraws.findMany({
-            orderBy: desc(lotteryDraws.drawTime),
-          });
+          return await database.select().from(lotteryDraws).orderBy(desc(lotteryDraws.drawTime));
         } catch (error) {
           console.error('Error fetching lottery draws:', error);
           return [];
@@ -307,9 +288,7 @@ export const appRouter = router({
         if (!database) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: '数据库不可用' });
         
         // 根据彩票类型代码获取彩票类型ID
-        const lotteryType = await database.query.lotteryTypes.findFirst({
-          where: eq(lotteryTypes.code, input.lotteryTypeCode),
-        });
+        const lotteryType = await database.select().from(lotteryTypes).where(eq(lotteryTypes.code, input.lotteryTypeCode)).limit(1).then(rows => rows[0]);
         
         if (!lotteryType) {
           throw new TRPCError({ code: 'BAD_REQUEST', message: '彩票类型不存在' });
