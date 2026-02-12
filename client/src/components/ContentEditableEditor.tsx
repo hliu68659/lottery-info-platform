@@ -154,6 +154,11 @@ export function ContentEditableEditor({
     '#800080', '#FFC0CB', '#A52A2A', '#808080',
   ];
 
+  const backgroundColors = [
+    '#FFFF00', '#00FF00', '#00FFFF', '#FF00FF',
+    '#FFA500', '#FFC0CB', '#FFFFCC', '#E0E0E0',
+  ];
+
   return (
     <div className="border rounded-lg overflow-hidden">
       <div className="bg-gray-100 border-b p-2 flex flex-wrap gap-1">
@@ -322,6 +327,23 @@ export function ContentEditableEditor({
               style={{ backgroundColor: color }}
               title={`颜色: ${color}`}
             />
+          ))}
+        </div>
+
+        <div className="w-px bg-gray-300 mx-1" />
+
+        {/* 背景色 */}
+        <div className="flex gap-1">
+          {backgroundColors.map((color) => (
+            <button
+              key={`bg-${color}`}
+              onClick={() => executeCommand('backColor', color)}
+              className="w-6 h-6 rounded border-2 border-gray-300 hover:border-gray-500 flex items-center justify-center"
+              style={{ backgroundColor: color }}
+              title={`背景色: ${color}`}
+            >
+              <span className="text-xs font-bold" style={{ color: color === '#FFFF00' || color === '#FFFFCC' ? '#000' : '#fff' }}>A</span>
+            </button>
           ))}
         </div>
 
